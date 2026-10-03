@@ -1,0 +1,9 @@
+docs/notes/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets (API keys once a hosted LLM backend is used)
+.env
