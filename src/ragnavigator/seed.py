@@ -14,7 +14,15 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from ragnavigator.db import DB_PATH, engine
-from ragnavigator.models import Base, Category, Entry, EntryLocation, Location, Requirement
+from ragnavigator.models import (
+    Base,
+    Category,
+    Entry,
+    EntryLocation,
+    Location,
+    Organization,
+    Requirement,
+)
 
 
 def seed(catalog_path: Path) -> None:
@@ -24,6 +32,8 @@ def seed(catalog_path: Path) -> None:
     Base.metadata.create_all(engine)
 
     with Session(engine) as session:
+        session.add(Organization(**catalog["organization"]))
+
         # Entries refer to locations by slug, so they're created first and looked up here.
         locations = {data["slug"]: Location(**data) for data in catalog["locations"]}
         session.add_all(locations.values())
@@ -38,8 +48,8 @@ def seed(catalog_path: Path) -> None:
 
     entry_count = sum(len(c["entries"]) for c in catalog["categories"])
     print(
-        f"Seeded {len(catalog['categories'])} categories, {entry_count} entries and "
-        f"{len(locations)} locations into {DB_PATH}"
+        f"Seeded {catalog['organization']['name']}: {len(catalog['categories'])} categories, "
+        f"{entry_count} entries and {len(locations)} locations into {DB_PATH}"
     )
 
 

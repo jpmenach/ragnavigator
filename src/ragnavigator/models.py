@@ -1,9 +1,31 @@
+import re
+
 from sqlalchemy import ForeignKey, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
+
+HEX_COLOR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Organization(Base):
+    """Whose catalog this is: its name and brand color. A single row."""
+
+    __tablename__ = "organization"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    primary_color: Mapped[str]
+
+    @validates("primary_color")
+    def _check_color(self, _key: str, value: str) -> str:
+        # The color ends up in the page's CSS. Accepting only "#rrggbb" means a typo fails
+        # here, loudly, and nothing else can ever reach the stylesheet.
+        if not HEX_COLOR.fullmatch(value):
+            raise ValueError(f'primary_color must look like "#1d4f8c", got {value!r}')
+        return value
 
 
 class Category(Base):
