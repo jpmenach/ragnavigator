@@ -108,7 +108,9 @@ All with the local `llama3.1:8b`.
 - **One destination per answer.** Navigation follows the top source only. A question
   about two places ("where do I request it and where do I pay?") opens one of them.
 - **No admin yet.** The catalog is edited in `examples/universidad-demo/data/catalog.json`
-  and loaded with the seed script; the index is rebuilt by hand.
+  and loaded with the seed script; the index is rebuilt by hand. Restart the server after
+  rebuilding the index: a running server keeps the old one loaded, and its next answer
+  fails.
 
 ## Running it
 
