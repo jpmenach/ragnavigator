@@ -1,6 +1,8 @@
 """What the API takes and returns. Kept apart from the models so the database can change without
 changing the shape the frontend relies on. """
 
+from typing import Annotated, Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -81,9 +83,35 @@ class SourceOut(BaseModel):
     score: float
 
 
+class NavigateAction(BaseModel):
+    type: Literal["navigate"] = "navigate"
+    # A site route, with the section's #anchor when there is one.
+    to: str
+
+
+class HighlightAction(BaseModel):
+    type: Literal["highlight"] = "highlight"
+    # The id of an element on the page the user was just taken to.
+    target: str
+
+
+class OfferDownloadAction(BaseModel):
+    type: Literal["offer_download"] = "offer_download"
+    url: str
+    label: str
+
+
+# The closed set of things the assistant can make the site do. All of them only show
+# things; none changes data, so the frontend can run them without asking.
+Action = Annotated[
+    NavigateAction | HighlightAction | OfferDownloadAction, Field(discriminator="type")
+]
+
+
 class AskOut(BaseModel):
     # Empty when not grounded: the catalog doesn't answer the question, and the frontend
     # says so in its own words instead of showing a guess.
     answer: str
     grounded: bool
     sources: list[SourceOut]
+    actions: list[Action]

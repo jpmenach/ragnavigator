@@ -3,7 +3,7 @@ import { LocationDetails } from '../components/LocationDetails'
 import type { EntrySummary, LocationEntry, LocationWithEntries } from '../types'
 
 // Each location's id is its slug, so /locations#caja-central lands on that card (the
-// assistant's show_location will use it).
+// assistant navigates and highlights it).
 export function LocationsPage({ locations }: { locations: LocationWithEntries[] }) {
   return (
     <>

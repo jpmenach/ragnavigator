@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from ragnavigator.actions import actions_for
 from ragnavigator.assistant import ask
 from ragnavigator.db import get_session
 from ragnavigator.models import Category, Entry, EntryLocation, Location, Organization
@@ -67,20 +68,19 @@ def ask_question(body: AskIn) -> AskOut:
     if not result.grounded:
         # Retrieval always returns its closest chunks, even for an unrelated question. Only
         # sources that backed an answer are worth showing, or navigating to.
-        return AskOut(answer="", grounded=False, sources=[])
+        return AskOut(answer="", grounded=False, sources=[], actions=[])
+    sources = [
+        SourceOut(
+            kind=chunk.metadata["kind"],
+            slug=chunk.metadata["slug"],
+            section=chunk.metadata["section"],
+            route=chunk.metadata["route"],
+            score=chunk.score,
+        )
+        for chunk in result.sources
+    ]
     return AskOut(
-        answer=result.text,
-        grounded=True,
-        sources=[
-            SourceOut(
-                kind=chunk.metadata["kind"],
-                slug=chunk.metadata["slug"],
-                section=chunk.metadata["section"],
-                route=chunk.metadata["route"],
-                score=chunk.score,
-            )
-            for chunk in result.sources
-        ],
+        answer=result.text, grounded=True, sources=sources, actions=actions_for(sources)
     )
 
 
