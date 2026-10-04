@@ -1,5 +1,6 @@
 import { useLayoutEffect } from 'react'
 import { Link, Outlet, ScrollRestoration } from 'react-router'
+import { AssistantPanel } from './components/AssistantPanel'
 import { applyTheme } from './theme'
 import type { Organization } from './types'
 
@@ -14,7 +15,7 @@ export function Layout({ organization }: { organization: Organization }) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <header className="bg-primary text-on-primary">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-4">
           <Link to="/" className="text-lg font-semibold">
             {organization.name}
           </Link>
@@ -28,9 +29,14 @@ export function Layout({ organization }: { organization: Organization }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <Outlet />
-      </main>
+      {/* Page and assistant side by side on large screens; on small ones the assistant is a
+          bottom sheet. The page column keeps a readable width either way. */}
+      <div className="mx-auto max-w-6xl gap-8 px-4 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <main className="max-w-3xl">
+          <Outlet />
+        </main>
+        <AssistantPanel />
+      </div>
       {/* Without it, a client-side navigation keeps the previous page's scroll position.
           It also scrolls to #anchors, e.g. a category on the home page. */}
       <ScrollRestoration />

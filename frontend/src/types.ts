@@ -59,3 +59,24 @@ export type Organization = {
   name: string
   primary_color: string
 }
+
+export type Source = {
+  kind: 'entry' | 'location'
+  slug: string
+  section: string
+  route: string
+  score: number
+}
+
+// Discriminated on `type`, like the Action union in schemas.py.
+export type Action =
+  | { type: 'navigate'; to: string }
+  | { type: 'highlight'; target: string }
+  | { type: 'offer_download'; url: string; label: string }
+
+export type AskResponse = {
+  answer: string
+  grounded: boolean
+  sources: Source[]
+  actions: Action[]
+}
