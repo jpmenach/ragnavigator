@@ -62,10 +62,8 @@ def get_entry_pdf(slug: str, session: SessionDep) -> Response:
 
 
 @app.post("/api/ask")
-def ask_question(body: AskIn, session: SessionDep) -> AskOut:
-    organization = session.scalar(select(Organization).order_by(Organization.id).limit(1))
-    name = organization.name if organization else "this organization"
-    result = ask(body.question, name)
+def ask_question(body: AskIn) -> AskOut:
+    result = ask(body.question)
     if not result.grounded:
         # Retrieval always returns its closest chunks, even for an unrelated question. Only
         # sources that backed an answer are worth showing, or navigating to.

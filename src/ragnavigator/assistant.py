@@ -12,9 +12,13 @@ from ragstarter.core.query import Answer, answer
 from ragnavigator.indexing import INDEX_DIR
 
 
-def ask(question: str, organization_name: str) -> Answer:
+def ask(question: str) -> Answer:
     index, llm = _engine()
-    return answer(question, index, llm, persona=_persona(organization_name))
+    # No persona on purpose. ragstarter puts it before its grounding rules, and with
+    # llama3.1:8b any persona (Spanish or English) weakened them: the model replied "NO."
+    # instead of the NO_ANSWER sentinel, and turned "bolivianos (Bs)" into dollars.
+    # Evaluation: 18-19/21 with a persona, 20/21 without, answer language still right.
+    return answer(question, index, llm)
 
 
 @cache
@@ -23,15 +27,3 @@ def _engine() -> tuple[VectorStoreIndex, LLM]:
     # Done on the first question and kept, rather than at startup, so `fastapi dev`
     # reloads stay fast while working on the rest of the site.
     return load_index(INDEX_DIR), build_llm()
-
-
-# In Spanish, like the catalog: with an English persona, llama3.1:8b answered Spanish
-# questions in English (2 of 3). ragstarter's language rule still lets English questions
-# get English answers.
-def _persona(organization_name: str) -> str:
-    return (
-        f"Eres el asistente virtual de {organization_name}. Ayudas a estudiantes y "
-        "visitantes con sus trámites y servicios: requisitos, costos, duración, lugares y "
-        "horarios. Responde de forma breve y amable. Copia montos, monedas y horarios tal "
-        "como aparecen en el contexto."
-    )
