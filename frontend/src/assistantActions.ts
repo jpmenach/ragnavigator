@@ -20,6 +20,15 @@ export function describe(action: Action): string | null {
   }
 }
 
+// The button shown instead of moving the page, when the user turned auto-navigation off.
+export function suggestionLabel(actions: Action[]): string {
+  const destination = actions.find((action) => action.type === 'navigate')
+  const section = actions.find((action) => action.type === 'highlight')
+  if (destination?.to.startsWith('/locations')) return 'Ver el lugar'
+  if (section) return `Ver ${SECTION_NAMES[section.target] ?? 'la sección'}`
+  return 'Ver el trámite'
+}
+
 // Plays the highlight animation on an element of the current page. Done on the DOM
 // directly: it's a moment of decoration, not state React needs to keep.
 export async function highlight(id: string) {

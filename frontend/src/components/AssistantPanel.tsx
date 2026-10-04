@@ -2,20 +2,41 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { askQuestion } from '../api'
-import { describe, highlight } from '../assistantActions'
+import { describe, highlight, suggestionLabel } from '../assistantActions'
 import type { Action } from '../types'
 
 type Message = {
   role: 'user' | 'assistant'
   text: string
-  // Assistant messages only: what it did on the page, and what it offers.
-  steps?: string[]
-  downloads?: Extract<Action, { type: 'offer_download' }>[]
+  // Assistant messages only: the actions that came with the answer, and whether the ones
+  // that move the page have run (right away with auto-navigation, otherwise on click).
+  actions?: Action[]
+  ran?: boolean
 }
 
 // Shown instead of a guess when the catalog doesn't answer the question.
 const NOT_FOUND = 'No tengo esa información en el catálogo de trámites.'
 const FAILED = 'No pude responder ahora. Intenta de nuevo en unos minutos.'
+
+// A personal preference, so it stays in this browser. Storage can be blocked (private
+// windows, strict settings); the panel then just uses the default.
+const AUTO_NAVIGATE_KEY = 'ragnavigator.autoNavigate'
+
+function readAutoNavigate(): boolean {
+  try {
+    return localStorage.getItem(AUTO_NAVIGATE_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+function writeAutoNavigate(value: boolean) {
+  try {
+    localStorage.setItem(AUTO_NAVIGATE_KEY, String(value))
+  } catch {
+    // Not remembered; it still applies for this visit.
+  }
+}
 
 // Lives in the layout, which stays mounted across pages, so the conversation survives
 // navigation (including the navigation the assistant itself will trigger).
@@ -25,6 +46,8 @@ export function AssistantPanel() {
   const [pending, setPending] = useState(false)
   // Small screens only: the panel is a bottom sheet behind a button. Always shown on large.
   const [open, setOpen] = useState(false)
+  // On by default: taking the user to the answer is the point. Off, it only suggests.
+  const [autoNavigate, setAutoNavigate] = useState(readAutoNavigate)
   const listRef = useRef<HTMLOListElement>(null)
   const navigate = useNavigate()
 
@@ -47,19 +70,28 @@ export function AssistantPanel() {
       const { actions } = response
       setMessages((previous) => [
         ...previous,
-        {
-          role: 'assistant',
-          text: reply,
-          steps: actions.map(describe).filter((step) => step !== null),
-          downloads: actions.filter((action) => action.type === 'offer_download'),
-        },
+        { role: 'assistant', text: reply, actions, ran: autoNavigate },
       ])
-      await runActions(actions)
+      if (autoNavigate) await runActions(actions)
     } catch {
       setMessages((previous) => [...previous, { role: 'assistant', text: FAILED }])
     } finally {
       setPending(false)
     }
+  }
+
+  function changeAutoNavigate(value: boolean) {
+    setAutoNavigate(value)
+    writeAutoNavigate(value)
+  }
+
+  // The suggestion button: run that answer's actions now, and show them as done.
+  async function follow(index: number) {
+    const { actions = [] } = messages[index]
+    setMessages((previous) =>
+      previous.map((message, i) => (i === index ? { ...message, ran: true } : message)),
+    )
+    await runActions(actions)
   }
 
   // Every action only shows something (none changes data), so they run without asking.
@@ -91,10 +123,19 @@ export function AssistantPanel() {
       >
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h2 className="font-semibold">Asistente</h2>
+          <label className="ml-auto flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={autoNavigate}
+              onChange={(event) => changeAutoNavigate(event.target.checked)}
+              className="accent-primary"
+            />
+            Llevarme a la respuesta
+          </label>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="text-sm text-gray-600 hover:underline lg:hidden"
+            className="ml-4 text-sm text-gray-600 hover:underline lg:hidden"
           >
             Cerrar
           </button>
@@ -107,32 +148,7 @@ export function AssistantPanel() {
             </li>
           )}
           {messages.map((message, index) => (
-            <li
-              key={index}
-              className={
-                message.role === 'user'
-                  ? 'ml-8 rounded-lg bg-primary px-3 py-2 text-on-primary'
-                  : 'mr-8 rounded-lg bg-gray-100 px-3 py-2'
-              }
-            >
-              {message.text}
-              {message.steps && message.steps.length > 0 && (
-                <ul className="mt-2 space-y-0.5 text-sm text-gray-500">
-                  {message.steps.map((step) => (
-                    <li key={step}>→ {step}</li>
-                  ))}
-                </ul>
-              )}
-              {message.downloads?.map((download) => (
-                <a
-                  key={download.url}
-                  href={download.url}
-                  className="mt-2 block text-sm font-medium text-primary hover:underline"
-                >
-                  {download.label}
-                </a>
-              ))}
-            </li>
+            <MessageItem key={index} message={message} onFollow={() => follow(index)} />
           ))}
           {pending && <li className="mr-8 text-sm text-gray-500">Buscando…</li>}
         </ol>
@@ -156,5 +172,45 @@ export function AssistantPanel() {
         </form>
       </aside>
     </>
+  )
+}
+
+function MessageItem({ message, onFollow }: { message: Message; onFollow: () => void }) {
+  const actions = message.actions ?? []
+  const pageActions = actions.filter((action) => action.type !== 'offer_download')
+  const downloads = actions.filter((action) => action.type === 'offer_download')
+
+  if (message.role === 'user') {
+    return <li className="ml-8 rounded-lg bg-primary px-3 py-2 text-on-primary">{message.text}</li>
+  }
+  return (
+    <li className="mr-8 rounded-lg bg-gray-100 px-3 py-2">
+      {message.text}
+      {pageActions.length > 0 && message.ran && (
+        <ul className="mt-2 space-y-0.5 text-sm text-gray-500">
+          {pageActions.map((action) => (
+            <li key={action.type}>→ {describe(action)}</li>
+          ))}
+        </ul>
+      )}
+      {pageActions.length > 0 && !message.ran && (
+        <button
+          type="button"
+          onClick={onFollow}
+          className="mt-2 block rounded-lg border border-primary px-3 py-1 text-sm font-medium text-primary hover:bg-primary/5"
+        >
+          {suggestionLabel(pageActions)}
+        </button>
+      )}
+      {downloads.map((download) => (
+        <a
+          key={download.url}
+          href={download.url}
+          className="mt-2 block text-sm font-medium text-primary hover:underline"
+        >
+          {download.label}
+        </a>
+      ))}
+    </li>
   )
 }

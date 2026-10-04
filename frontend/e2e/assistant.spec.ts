@@ -85,3 +85,26 @@ test('a question the catalog can not answer stays put and says so', async ({ pag
   await expect(panel.getByText('No tengo esa información en el catálogo de trámites.')).toBeVisible()
   await expect(page).toHaveURL(/\/locations$/)
 })
+
+test('with auto-navigation off, the answer suggests the section instead', async ({ page }) => {
+  await answerWith(page, REQUIREMENTS_ANSWER)
+  await page.goto('/')
+  await page.getByLabel('Llevarme a la respuesta').uncheck()
+  const panel = await ask(page, '¿Qué necesito para el certificado de notas?')
+
+  const suggestion = panel.getByRole('button', { name: 'Ver los requisitos' })
+  await expect(suggestion).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
+  // The PDF is offered either way: offering it doesn't move the page.
+  await expect(panel.getByRole('link', { name: 'Descargar requisitos (PDF)' })).toBeVisible()
+
+  await suggestion.click()
+  await expect(page).toHaveURL(/\/entries\/certificado-de-notas#requirements$/)
+  await expect(page.locator('#requirements')).toHaveClass(/assistant-highlight/)
+  await expect(suggestion).toHaveCount(0)
+  await expect(panel.getByText('→ Resalté los requisitos')).toBeVisible()
+
+  // The choice is remembered in this browser.
+  await page.reload()
+  await expect(page.getByLabel('Llevarme a la respuesta')).not.toBeChecked()
+})
