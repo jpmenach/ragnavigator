@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router'
-import App from './App.tsx'
 import { Layout } from './Layout.tsx'
-import { getEntry } from './api.ts'
+import { getCategories, getEntry } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
-import type { Entry } from './types.ts'
+import { HomeError, HomePage } from './pages/HomePage.tsx'
+import type { CategoryWithEntries, Entry } from './types.ts'
 import './index.css'
 
 // Loaders fetch before the page renders, so a page never shows half-loaded. That also
@@ -16,7 +16,12 @@ const router = createBrowserRouter([
     path: '/',
     Component: Layout,
     children: [
-      { index: true, Component: App },
+      {
+        index: true,
+        loader: ({ request }) => getCategories(request.signal),
+        Component: () => <HomePage categories={useLoaderData<CategoryWithEntries[]>()} />,
+        ErrorBoundary: HomeError,
+      },
       {
         path: 'tramites/:slug',
         loader: ({ params, request }) => getEntry(params.slug!, request.signal),

@@ -35,3 +35,13 @@ export type Entry = {
   requirements: Requirement[]
   locations: EntryLocation[]
 }
+
+export type EntrySummary = {
+  title: string
+  slug: string
+  summary: string
+}
+
+export type CategoryWithEntries = Category & {
+  entries: EntrySummary[]
+}

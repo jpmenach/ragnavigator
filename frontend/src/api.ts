@@ -1,5 +1,5 @@
 import { data } from 'react-router'
-import type { Entry } from './types'
+import type { CategoryWithEntries, Entry } from './types'
 
 export async function getEntry(slug: string, signal: AbortSignal): Promise<Entry> {
   const response = await fetch(`/api/entries/${slug}`, { signal })
@@ -10,6 +10,14 @@ export async function getEntry(slug: string, signal: AbortSignal): Promise<Entry
   }
   if (!response.ok) {
     throw new Error(`GET /api/entries/${slug} failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function getCategories(signal: AbortSignal): Promise<CategoryWithEntries[]> {
+  const response = await fetch('/api/categories', { signal })
+  if (!response.ok) {
+    throw new Error(`GET /api/categories failed with ${response.status}`)
   }
   return response.json()
 }
