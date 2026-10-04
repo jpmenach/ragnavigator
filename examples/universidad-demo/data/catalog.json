@@ -67,9 +67,9 @@
             {"name": "Formulario de solicitud llenado", "description": "Se entrega en plataforma de atención."}
           ],
           "locations": [
-            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se paga en"},
-            {"location": "plataforma-de-atencion", "role": "Se recoge en"}
+            {"location": "plataforma-de-atencion", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Pago"},
+            {"location": "plataforma-de-atencion", "role": "Entrega"}
           ]
         },
         {
@@ -85,9 +85,9 @@
             {"name": "Comprobante de inscripción de la gestión actual"}
           ],
           "locations": [
-            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se paga en"},
-            {"location": "plataforma-de-atencion", "role": "Se recoge en"}
+            {"location": "plataforma-de-atencion", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Pago"},
+            {"location": "plataforma-de-atencion", "role": "Entrega"}
           ]
         },
         {
@@ -102,7 +102,7 @@
             {"name": "Fotocopia de carnet de identidad"}
           ],
           "locations": [
-            {"location": "registros-academicos", "role": "Se solicita en"}
+            {"location": "registros-academicos", "role": "Solicitud"}
           ]
         },
         {
@@ -119,8 +119,8 @@
             {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
           ],
           "locations": [
-            {"location": "registros-academicos", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se paga en"}
+            {"location": "registros-academicos", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Pago"}
           ]
         }
       ]
@@ -145,9 +145,9 @@
             {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
           ],
           "locations": [
-            {"location": "secretaria-general", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se paga en"},
-            {"location": "secretaria-general", "role": "Se recoge en"}
+            {"location": "secretaria-general", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Pago"},
+            {"location": "secretaria-general", "role": "Entrega"}
           ]
         },
         {
@@ -163,9 +163,9 @@
             {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
           ],
           "locations": [
-            {"location": "secretaria-general", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se paga en"},
-            {"location": "secretaria-general", "role": "Se recoge en"}
+            {"location": "secretaria-general", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Pago"},
+            {"location": "secretaria-general", "role": "Entrega"}
           ]
         }
       ]
@@ -187,7 +187,7 @@
             {"name": "Formulario de plan de pagos firmado"}
           ],
           "locations": [
-            {"location": "caja-central", "role": "Se solicita en"}
+            {"location": "caja-central", "role": "Solicitud"}
           ]
         },
         {
@@ -203,8 +203,8 @@
             {"name": "Fotocopia de carnet de identidad"}
           ],
           "locations": [
-            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
-            {"location": "caja-central", "role": "Se recibe el dinero en"}
+            {"location": "plataforma-de-atencion", "role": "Solicitud"},
+            {"location": "caja-central", "role": "Devolución del dinero"}
           ]
         }
       ]
@@ -224,7 +224,7 @@
             {"name": "Carnet universitario vigente"}
           ],
           "locations": [
-            {"location": "gabinete-medico", "role": "Se atiende en"}
+            {"location": "gabinete-medico", "role": "Atención"}
           ]
         },
         {
@@ -242,7 +242,7 @@
             {"name": "Croquis del domicilio"}
           ],
           "locations": [
-            {"location": "bienestar-universitario", "role": "Se solicita en"}
+            {"location": "bienestar-universitario", "role": "Solicitud"}
           ]
         }
       ]

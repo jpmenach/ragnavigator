@@ -99,8 +99,9 @@ class EntryLocation(Base):
         ForeignKey("entry.id", ondelete="CASCADE"), primary_key=True
     )
     location_id: Mapped[int] = mapped_column(ForeignKey("location.id"), primary_key=True)
-    # Part of the key: one place can play two roles for the same entry ("se solicita en"
-    # and "se recoge en" the same counter).
+    # A noun ("Solicitud", "Pago", "Entrega") so it reads from both sides: under a place on
+    # the entry page, and under an entry on the locations page. Part of the key: one place
+    # can play two roles for the same entry (request and pick up at the same counter).
     role: Mapped[str] = mapped_column(primary_key=True)
     # The links usually read as steps (request here, pay there, pick up here), so they keep
     # the order they were entered in, like requirements.
