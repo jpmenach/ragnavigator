@@ -1,4 +1,4 @@
-import { isRouteErrorResponse, useRouteError } from 'react-router'
+import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
 import type { Entry, Location } from '../types'
 
 // The section ids are part of the page's contract: the assistant will scroll to and
@@ -6,9 +6,13 @@ import type { Entry, Location } from '../types'
 export function EntryPage({ entry }: { entry: Entry }) {
   return (
     <article>
-      <p className="text-sm font-medium tracking-wide text-primary uppercase">
+      {/* Back to the category's group on the home page (there's no category page). */}
+      <Link
+        to={`/#${entry.category.slug}`}
+        className="text-sm font-medium tracking-wide text-primary uppercase hover:underline"
+      >
         {entry.category.name}
-      </p>
+      </Link>
       <h1 className="mt-1 text-3xl font-bold">{entry.title}</h1>
       <p className="mt-2 text-lg text-gray-600">{entry.summary}</p>
 

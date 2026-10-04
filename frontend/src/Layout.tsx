@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router'
+import { Link, Outlet, ScrollRestoration } from 'react-router'
 
 export function Layout() {
   return (
@@ -14,6 +14,9 @@ export function Layout() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <Outlet />
       </main>
+      {/* Without it, a client-side navigation keeps the previous page's scroll position.
+          It also scrolls to #anchors, e.g. a category on the home page. */}
+      <ScrollRestoration />
     </div>
   )
 }
