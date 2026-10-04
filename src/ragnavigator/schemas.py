@@ -53,3 +53,12 @@ class EntrySummaryOut(Schema):
 
 class CategoryWithEntriesOut(CategoryOut):
     entries: list[EntrySummaryOut]
+
+
+class LocationEntryOut(Schema):
+    role: str
+    entry: EntrySummaryOut
+
+
+class LocationWithEntriesOut(LocationOut):
+    entries: list[LocationEntryOut]

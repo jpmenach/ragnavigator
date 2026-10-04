@@ -79,6 +79,12 @@ class Location(Base):
     # y 14:00-18:00, sábados 8:00-12:00".
     hours: Mapped[str | None]
 
+    # What's done here, across entries: grouped by entry, each entry's links in step order.
+    entries: Mapped[list["EntryLocation"]] = relationship(
+        back_populates="location",
+        order_by="(EntryLocation.entry_id, EntryLocation.position)",
+    )
+
 
 class EntryLocation(Base):
     """Links an entry to a place, saying what happens there for that entry.
@@ -101,4 +107,4 @@ class EntryLocation(Base):
     position: Mapped[int]
 
     entry: Mapped[Entry] = relationship(back_populates="locations")
-    location: Mapped[Location] = relationship()
+    location: Mapped[Location] = relationship(back_populates="entries")

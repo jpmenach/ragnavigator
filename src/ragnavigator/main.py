@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from ragnavigator.db import get_session
-from ragnavigator.models import Category, Entry, EntryLocation
-from ragnavigator.schemas import CategoryWithEntriesOut, EntryOut
+from ragnavigator.models import Category, Entry, EntryLocation, Location
+from ragnavigator.schemas import CategoryWithEntriesOut, EntryOut, LocationWithEntriesOut
 
 app = FastAPI(title="ragnavigator")
 
@@ -39,3 +39,13 @@ def get_entry(slug: str, session: SessionDep) -> EntryOut:
     if entry is None:
         raise HTTPException(status_code=404, detail="Entry not found")
     return EntryOut.model_validate(entry)
+
+
+@app.get("/api/locations")
+def list_locations(session: SessionDep) -> list[LocationWithEntriesOut]:
+    locations = session.scalars(
+        select(Location)
+        .order_by(Location.id)
+        .options(selectinload(Location.entries).joinedload(EntryLocation.entry))
+    )
+    return [LocationWithEntriesOut.model_validate(location) for location in locations]
