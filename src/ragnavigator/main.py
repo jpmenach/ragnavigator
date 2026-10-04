@@ -1,6 +1,9 @@
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -79,3 +82,21 @@ def list_locations(session: SessionDep) -> list[LocationWithEntriesOut]:
         .options(selectinload(Location.entries).joinedload(EntryLocation.entry))
     )
     return [LocationWithEntriesOut.model_validate(location) for location in locations]
+
+
+# In production, FastAPI also serves the built frontend (npm run build), so the whole app is
+# one process. Registered last: routes match in order, so every /api route wins over the
+# catch-all below. In development Vite serves the frontend and this folder may not exist.
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+if FRONTEND_DIST.is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def frontend(path: str) -> FileResponse:
+        # A typo'd API call should be a 404, not the HTML page with a 200.
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        # Every other path is a page the frontend's router knows (/entries/…, /locations),
+        # so the same index.html is returned and React Router takes it from there.
+        return FileResponse(FRONTEND_DIST / "index.html")
