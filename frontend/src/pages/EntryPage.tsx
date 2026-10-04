@@ -46,6 +46,13 @@ export function EntryPage({ entry }: { entry: Entry }) {
             </li>
           ))}
         </ol>
+        {/* A plain <a>, not a router Link: it's a file from the API, not a page. */}
+        <a
+          href={`/api/entries/${entry.slug}/requirements.pdf`}
+          className="mt-4 inline-block rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5"
+        >
+          Descargar requisitos (PDF)
+        </a>
       </section>
 
       <section id="where-and-when" className="mt-8">
