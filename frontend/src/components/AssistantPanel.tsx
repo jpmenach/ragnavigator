@@ -98,6 +98,9 @@ export function AssistantPanel() {
   async function runActions(actions: Action[]) {
     for (const action of actions) {
       if (action.type === 'navigate') {
+        // On small screens the panel covers most of the page; get out of the way so the
+        // user sees where they were taken. No effect on large screens, where it's docked.
+        setOpen(false)
         // Resolves once the new page's loader has run, so the section to highlight exists.
         await navigate(action.to)
       } else if (action.type === 'highlight') {

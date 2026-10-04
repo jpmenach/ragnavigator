@@ -108,3 +108,23 @@ test('with auto-navigation off, the answer suggests the section instead', async 
   await page.reload()
   await expect(page.getByLabel('Llevarme a la respuesta')).not.toBeChecked()
 })
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 780 } })
+
+  test('the panel steps aside so the user sees where they were taken', async ({ page }) => {
+    await answerWith(page, REQUIREMENTS_ANSWER)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Preguntar' }).click()
+    const panel = await ask(page, '¿Qué necesito para el certificado de notas?')
+
+    await expect(page).toHaveURL(/\/entries\/certificado-de-notas#requirements$/)
+    await expect(panel).toBeHidden()
+    await expect(page.locator('#requirements')).toHaveClass(/assistant-highlight/)
+    await expect(page.locator('#requirements')).toBeInViewport()
+
+    // The conversation is still there when the panel comes back.
+    await page.getByRole('button', { name: 'Preguntar' }).click()
+    await expect(panel.getByText('→ Resalté los requisitos')).toBeVisible()
+  })
+})
