@@ -1,0 +1,251 @@
+{
+  "locations": [
+    {
+      "name": "Plataforma de atención",
+      "slug": "plataforma-de-atencion",
+      "building": "Edificio Central",
+      "floor": "Planta baja",
+      "directions": "A la derecha de la entrada principal.",
+      "hours": "Lunes a viernes de 8:00 a 18:00. Sábados de 8:00 a 12:00."
+    },
+    {
+      "name": "Caja central",
+      "slug": "caja-central",
+      "building": "Edificio Central",
+      "floor": "Planta baja",
+      "directions": "Al fondo del pasillo principal, ventanillas 1 a 4.",
+      "hours": "Lunes a viernes de 8:00 a 16:00."
+    },
+    {
+      "name": "Registros académicos",
+      "slug": "registros-academicos",
+      "building": "Edificio Central",
+      "floor": "Primer piso",
+      "directions": "Subiendo las gradas, primera puerta a la izquierda.",
+      "hours": "Lunes a viernes de 8:30 a 12:30 y de 14:30 a 18:00."
+    },
+    {
+      "name": "Secretaría general",
+      "slug": "secretaria-general",
+      "building": "Edificio Central",
+      "floor": "Segundo piso",
+      "directions": "Oficina 204.",
+      "hours": "Lunes a viernes de 9:00 a 12:00."
+    },
+    {
+      "name": "Bienestar universitario",
+      "slug": "bienestar-universitario",
+      "building": "Edificio B",
+      "floor": "Primer piso",
+      "directions": "Junto a la sala de lectura.",
+      "hours": "Lunes a viernes de 8:00 a 12:00 y de 14:00 a 18:00."
+    },
+    {
+      "name": "Gabinete médico",
+      "slug": "gabinete-medico",
+      "building": "Edificio B",
+      "floor": "Planta baja",
+      "directions": "Entrada lateral, frente al estacionamiento.",
+      "hours": "Lunes a viernes de 7:30 a 19:00. Sábados de 8:00 a 12:00."
+    }
+  ],
+  "categories": [
+    {
+      "name": "Trámites académicos",
+      "slug": "tramites-academicos",
+      "entries": [
+        {
+          "title": "Certificado de notas",
+          "slug": "certificado-de-notas",
+          "summary": "Documento oficial con las calificaciones de todas las materias cursadas.",
+          "cost": "50 Bs",
+          "duration": "3 días hábiles",
+          "notes": "El certificado incluye solo materias con nota final registrada. Las materias en curso no aparecen.",
+          "requirements": [
+            {"name": "Fotocopia de carnet de identidad"},
+            {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."},
+            {"name": "Formulario de solicitud llenado", "description": "Se entrega en plataforma de atención."}
+          ],
+          "locations": [
+            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se paga en"},
+            {"location": "plataforma-de-atencion", "role": "Se recoge en"}
+          ]
+        },
+        {
+          "title": "Certificado de alumno regular",
+          "slug": "certificado-de-alumno-regular",
+          "summary": "Constancia de que estás inscrito en la gestión actual.",
+          "cost": "30 Bs",
+          "duration": "1 día hábil",
+          "notes": "Sirve para trámites externos como seguros, becas o descuentos en transporte. Tiene validez de 30 días.",
+          "requirements": [
+            {"name": "Fotocopia de carnet de identidad"},
+            {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."},
+            {"name": "Comprobante de inscripción de la gestión actual"}
+          ],
+          "locations": [
+            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se paga en"},
+            {"location": "plataforma-de-atencion", "role": "Se recoge en"}
+          ]
+        },
+        {
+          "title": "Retiro de materias",
+          "slug": "retiro-de-materias",
+          "summary": "Dar de baja una o más materias inscritas sin que cuenten como reprobadas.",
+          "cost": "Gratuito",
+          "duration": "2 días hábiles",
+          "notes": "Solo se puede pedir durante las primeras 6 semanas del semestre. Después de ese plazo, la materia queda registrada como abandonada.",
+          "requirements": [
+            {"name": "Formulario de retiro firmado por el director de carrera"},
+            {"name": "Fotocopia de carnet de identidad"}
+          ],
+          "locations": [
+            {"location": "registros-academicos", "role": "Se solicita en"}
+          ]
+        },
+        {
+          "title": "Cambio de carrera",
+          "slug": "cambio-de-carrera",
+          "summary": "Pasar de tu carrera actual a otra carrera de la universidad.",
+          "cost": "150 Bs",
+          "duration": "10 días hábiles",
+          "notes": "Las materias aprobadas se convalidan si existen en el plan de estudios de la nueva carrera. La respuesta se comunica por correo institucional.",
+          "requirements": [
+            {"name": "Carta de solicitud dirigida al director de la carrera de destino"},
+            {"name": "Certificado de notas", "description": "Original, emitido en los últimos 30 días."},
+            {"name": "Fotocopia de carnet de identidad"},
+            {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
+          ],
+          "locations": [
+            {"location": "registros-academicos", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se paga en"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Titulación",
+      "slug": "titulacion",
+      "entries": [
+        {
+          "title": "Solicitud de diploma académico",
+          "slug": "solicitud-de-diploma-academico",
+          "summary": "Pedir el diploma académico después de aprobar todas las materias y la modalidad de graduación.",
+          "cost": "800 Bs",
+          "duration": "30 días hábiles",
+          "notes": "El diploma se recoge en persona. Si otra persona lo recoge, necesita un poder notariado.",
+          "requirements": [
+            {"name": "Certificado de notas", "description": "Original, con todas las materias aprobadas."},
+            {"name": "Acta de defensa de grado o de la modalidad de graduación"},
+            {"name": "Fotocopia legalizada del título de bachiller"},
+            {"name": "Fotocopia de carnet de identidad"},
+            {"name": "Dos fotografías 4x4 con fondo azul"},
+            {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
+          ],
+          "locations": [
+            {"location": "secretaria-general", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se paga en"},
+            {"location": "secretaria-general", "role": "Se recoge en"}
+          ]
+        },
+        {
+          "title": "Legalización de diploma",
+          "slug": "legalizacion-de-diploma",
+          "summary": "Obtener copias legalizadas del diploma académico para presentar en otras instituciones.",
+          "cost": "40 Bs por copia",
+          "duration": "3 días hábiles",
+          "notes": "El diploma original se devuelve en el momento. Las copias legalizadas se recogen en secretaría general.",
+          "requirements": [
+            {"name": "Diploma académico original"},
+            {"name": "Fotocopias del diploma", "description": "Una por cada copia legalizada que necesites."},
+            {"name": "Comprobante de pago del trámite", "description": "Se obtiene en caja central."}
+          ],
+          "locations": [
+            {"location": "secretaria-general", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se paga en"},
+            {"location": "secretaria-general", "role": "Se recoge en"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Caja y pagos",
+      "slug": "caja-y-pagos",
+      "entries": [
+        {
+          "title": "Plan de pagos",
+          "slug": "plan-de-pagos",
+          "summary": "Dividir la colegiatura del semestre en cuotas mensuales.",
+          "cost": "Gratuito",
+          "duration": "1 día hábil",
+          "notes": "El plan permite hasta 5 cuotas por semestre. Una cuota con más de 15 días de retraso suspende la inscripción del semestre siguiente.",
+          "requirements": [
+            {"name": "Fotocopia de carnet de identidad del estudiante"},
+            {"name": "Fotocopia de carnet de identidad del garante", "description": "Persona mayor de edad que firma como responsable del pago."},
+            {"name": "Formulario de plan de pagos firmado"}
+          ],
+          "locations": [
+            {"location": "caja-central", "role": "Se solicita en"}
+          ]
+        },
+        {
+          "title": "Devolución de pagos",
+          "slug": "devolucion-de-pagos",
+          "summary": "Recuperar un pago hecho por error o por un trámite que no se realizó.",
+          "cost": "Gratuito",
+          "duration": "15 días hábiles",
+          "notes": "Se devuelve el monto completo si el trámite pagado no se inició. La solicitud debe hacerse dentro de los 60 días posteriores al pago.",
+          "requirements": [
+            {"name": "Comprobante de pago original"},
+            {"name": "Carta de solicitud explicando el motivo"},
+            {"name": "Fotocopia de carnet de identidad"}
+          ],
+          "locations": [
+            {"location": "plataforma-de-atencion", "role": "Se solicita en"},
+            {"location": "caja-central", "role": "Se recibe el dinero en"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bienestar universitario",
+      "slug": "bienestar-universitario",
+      "entries": [
+        {
+          "title": "Atención en gabinete médico",
+          "slug": "atencion-en-gabinete-medico",
+          "summary": "Consulta médica general para estudiantes inscritos.",
+          "cost": "Gratuito",
+          "duration": "Atención el mismo día, por orden de llegada",
+          "notes": "El gabinete atiende consultas generales y primeros auxilios. Las emergencias graves se derivan al hospital más cercano.",
+          "requirements": [
+            {"name": "Carnet universitario vigente"}
+          ],
+          "locations": [
+            {"location": "gabinete-medico", "role": "Se atiende en"}
+          ]
+        },
+        {
+          "title": "Beca socioeconómica",
+          "slug": "beca-socioeconomica",
+          "summary": "Descuento en la colegiatura para estudiantes con dificultades económicas.",
+          "cost": "Gratuito",
+          "duration": "20 días hábiles",
+          "notes": "La beca cubre entre el 25% y el 50% de la colegiatura. Se renueva cada semestre si se mantiene el promedio mínimo.",
+          "requirements": [
+            {"name": "Formulario de solicitud de beca"},
+            {"name": "Certificado de notas", "description": "Promedio mínimo de 65 sobre 100."},
+            {"name": "Fotocopia de carnet de identidad"},
+            {"name": "Certificado de ingresos familiares o declaración jurada de ingresos"},
+            {"name": "Croquis del domicilio"}
+          ],
+          "locations": [
+            {"location": "bienestar-universitario", "role": "Se solicita en"}
+          ]
+        }
+      ]
+    }
+  ]
+}
