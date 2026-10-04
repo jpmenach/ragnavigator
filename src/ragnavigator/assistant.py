@@ -1,5 +1,5 @@
 """Answer questions about the catalog with ragstarter, keeping track of where each answer
-came from on the site."""
+came from on the site. """
 
 from functools import cache
 

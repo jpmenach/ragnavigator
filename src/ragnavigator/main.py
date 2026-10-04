@@ -88,7 +88,7 @@ def ask_question(body: AskIn, session: SessionDep) -> AskOut:
 
 def _load_entry(session: Session, slug: str) -> Entry:
     # Everything the page and the PDF show, in one go (a few queries, not one per
-    # requirement or location), while the session is still open.
+    # requirement or location), while the session is still open. 
     entry = session.scalar(
         select(Entry)
         .where(Entry.slug == slug)

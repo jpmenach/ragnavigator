@@ -1,5 +1,5 @@
 """What the API takes and returns. Kept apart from the models so the database can change without
-changing the shape the frontend relies on."""
+changing the shape the frontend relies on. """
 
 from pydantic import BaseModel, ConfigDict, Field
 
