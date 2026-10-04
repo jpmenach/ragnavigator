@@ -2,7 +2,7 @@ import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
 import type { Entry, Location } from '../types'
 
 // The section ids are part of the page's contract: the assistant will scroll to and
-// highlight them (#requisitos, #donde-y-cuando), so they shouldn't change casually.
+// highlight them (#requirements, #where-and-when), so they shouldn't change casually.
 export function EntryPage({ entry }: { entry: Entry }) {
   return (
     <article>
@@ -33,7 +33,7 @@ export function EntryPage({ entry }: { entry: Entry }) {
         </dl>
       )}
 
-      <section id="requisitos" className="mt-8">
+      <section id="requirements" className="mt-8">
         <h2 className="text-xl font-semibold">Requisitos</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-6 marker:text-gray-400">
           {entry.requirements.map((requirement) => (
@@ -47,7 +47,7 @@ export function EntryPage({ entry }: { entry: Entry }) {
         </ol>
       </section>
 
-      <section id="donde-y-cuando" className="mt-8">
+      <section id="where-and-when" className="mt-8">
         <h2 className="text-xl font-semibold">Dónde y cuándo</h2>
         <ol className="mt-3 space-y-3">
           {entry.locations.map(({ role, location }) => (
@@ -61,7 +61,7 @@ export function EntryPage({ entry }: { entry: Entry }) {
       </section>
 
       {entry.notes && (
-        <section id="notas" className="mt-8">
+        <section id="notes" className="mt-8">
           <h2 className="text-xl font-semibold">Notas</h2>
           <p className="mt-3 text-gray-700">{entry.notes}</p>
         </section>

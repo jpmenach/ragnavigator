@@ -23,7 +23,7 @@ const router = createBrowserRouter([
         ErrorBoundary: HomeError,
       },
       {
-        path: 'tramites/:slug',
+        path: 'entries/:slug',
         loader: ({ params, request }) => getEntry(params.slug!, request.signal),
         Component: () => <EntryPage entry={useLoaderData<Entry>()} />,
         // Rendered inside the layout, so a missing trámite still shows the header.

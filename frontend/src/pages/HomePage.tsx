@@ -18,7 +18,7 @@ export function HomePage({ categories }: { categories: CategoryWithEntries[] }) 
             {category.entries.map((entry) => (
               <li key={entry.slug}>
                 <Link
-                  to={`/tramites/${entry.slug}`}
+                  to={`/entries/${entry.slug}`}
                   className="block h-full rounded-lg border border-gray-200 p-4 hover:border-primary"
                 >
                   <span className="font-semibold">{entry.title}</span>
