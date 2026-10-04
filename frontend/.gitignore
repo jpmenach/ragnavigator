@@ -11,9 +11,10 @@ node_modules
 dist
 dist-ssr
 
-# Playwright output (screenshots of failures, reports)
+# Playwright output (screenshots of failures, reports, the recorded demo)
 test-results
 playwright-report
+demo-output
 *.local
 
 # Editor directories and files
