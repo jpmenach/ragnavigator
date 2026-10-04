@@ -7,3 +7,6 @@ __pycache__/
 
 # Secrets (API keys once a hosted LLM backend is used)
 .env
+
+# Local data: the SQLite catalog, rebuilt from the seed script
+storage/
