@@ -8,3 +8,30 @@
   /* Text on top of the primary color, white or black depending on its lightness. */
   --color-on-primary: #ffffff;
 }
+
+/* Anything reached by #anchor (sections, places, categories) stops a little below the top
+   of the window instead of touching it, which also leaves room for the highlight ring. */
+[id] {
+  scroll-margin-top: 2rem;
+}
+
+/* The assistant's highlight: a ring in the organization's color that holds for a moment and
+   fades, so the eye finds the section without it staying marked. */
+@keyframes assistant-highlight {
+  0%,
+  40% {
+    outline-color: var(--color-primary);
+    background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  }
+  100% {
+    outline-color: transparent;
+    background-color: transparent;
+  }
+}
+
+.assistant-highlight {
+  outline: 3px solid transparent;
+  outline-offset: 6px;
+  border-radius: 0.5rem;
+  animation: assistant-highlight 3s ease-out;
+}

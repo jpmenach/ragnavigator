@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 import { askQuestion } from '../api'
+import { describe, highlight } from '../assistantActions'
+import type { Action } from '../types'
 
-type Message = { role: 'user' | 'assistant'; text: string }
+type Message = {
+  role: 'user' | 'assistant'
+  text: string
+  // Assistant messages only: what it did on the page, and what it offers.
+  steps?: string[]
+  downloads?: Extract<Action, { type: 'offer_download' }>[]
+}
 
 // Shown instead of a guess when the catalog doesn't answer the question.
 const NOT_FOUND = 'No tengo esa información en el catálogo de trámites.'
@@ -17,6 +26,7 @@ export function AssistantPanel() {
   // Small screens only: the panel is a bottom sheet behind a button. Always shown on large.
   const [open, setOpen] = useState(false)
   const listRef = useRef<HTMLOListElement>(null)
+  const navigate = useNavigate()
 
   // Keep the latest message in view. Scrolls the list itself, not the page.
   useEffect(() => {
@@ -34,11 +44,33 @@ export function AssistantPanel() {
     try {
       const response = await askQuestion(text)
       const reply = response.grounded ? response.answer : NOT_FOUND
-      setMessages((previous) => [...previous, { role: 'assistant', text: reply }])
+      const { actions } = response
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: 'assistant',
+          text: reply,
+          steps: actions.map(describe).filter((step) => step !== null),
+          downloads: actions.filter((action) => action.type === 'offer_download'),
+        },
+      ])
+      await runActions(actions)
     } catch {
       setMessages((previous) => [...previous, { role: 'assistant', text: FAILED }])
     } finally {
       setPending(false)
+    }
+  }
+
+  // Every action only shows something (none changes data), so they run without asking.
+  async function runActions(actions: Action[]) {
+    for (const action of actions) {
+      if (action.type === 'navigate') {
+        // Resolves once the new page's loader has run, so the section to highlight exists.
+        await navigate(action.to)
+      } else if (action.type === 'highlight') {
+        await highlight(action.target)
+      }
     }
   }
 
@@ -84,6 +116,22 @@ export function AssistantPanel() {
               }
             >
               {message.text}
+              {message.steps && message.steps.length > 0 && (
+                <ul className="mt-2 space-y-0.5 text-sm text-gray-500">
+                  {message.steps.map((step) => (
+                    <li key={step}>→ {step}</li>
+                  ))}
+                </ul>
+              )}
+              {message.downloads?.map((download) => (
+                <a
+                  key={download.url}
+                  href={download.url}
+                  className="mt-2 block text-sm font-medium text-primary hover:underline"
+                >
+                  {download.label}
+                </a>
+              ))}
             </li>
           ))}
           {pending && <li className="mr-8 text-sm text-gray-500">Buscando…</li>}

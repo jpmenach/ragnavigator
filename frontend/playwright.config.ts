@@ -1,12 +1,10 @@
 import { defineConfig } from '@playwright/test'
 
 // End-to-end tests drive the real app in a real (headless) browser: FastAPI serving the
-// built frontend, the real catalog index and a local Ollama. Seed and index first. Answers
-// take seconds, so timeouts are generous.
+// built frontend and the seeded catalog. The tests replace /api/ask with fixed answers, so
+// they need neither Ollama nor the index.
 export default defineConfig({
   testDir: 'e2e',
-  timeout: 120_000,
-  expect: { timeout: 60_000 },
   use: {
     // Not 8000, so a `fastapi dev` running for development doesn't get in the way.
     baseURL: 'http://localhost:8001',
