@@ -5,13 +5,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from ragnavigator.db import get_session
-from ragnavigator.models import Category, Entry, EntryLocation, Location
+from ragnavigator.models import Category, Entry, EntryLocation, Location, Organization
 from ragnavigator.pdf import requirements_pdf
-from ragnavigator.schemas import CategoryWithEntriesOut, EntryOut, LocationWithEntriesOut
+from ragnavigator.schemas import (
+    CategoryWithEntriesOut,
+    EntryOut,
+    LocationWithEntriesOut,
+    OrganizationOut,
+)
 
 app = FastAPI(title="ragnavigator")
 
 SessionDep = Annotated[Session, Depends(get_session)]
+
+
+@app.get("/api/organization")
+def get_organization(session: SessionDep) -> OrganizationOut:
+    # A single row; the first one wins if there were ever more.
+    organization = session.scalar(select(Organization).order_by(Organization.id).limit(1))
+    if organization is None:
+        raise HTTPException(status_code=404, detail="Organization not configured")
+    return OrganizationOut.model_validate(organization)
 
 
 @app.get("/api/categories")

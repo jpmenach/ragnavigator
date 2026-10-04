@@ -1,12 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router'
-import { Layout } from './Layout.tsx'
-import { getCategories, getEntry, getLocations } from './api.ts'
+import { Layout, LayoutError } from './Layout.tsx'
+import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
 import { HomeError, HomePage } from './pages/HomePage.tsx'
 import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
-import type { CategoryWithEntries, Entry, LocationWithEntries } from './types.ts'
+import type { CategoryWithEntries, Entry, LocationWithEntries, Organization } from './types.ts'
 import './index.css'
 
 // Loaders fetch before the page renders, so a page never shows half-loaded. That also
@@ -15,7 +15,12 @@ import './index.css'
 const router = createBrowserRouter([
   {
     path: '/',
-    Component: Layout,
+    loader: ({ request }) => getOrganization(request.signal),
+    Component: () => <Layout organization={useLoaderData<Organization>()} />,
+    ErrorBoundary: LayoutError,
+    // Shown while the first loaders run. Blank on purpose: it's a fraction of a second, and
+    // without the organization there's no header to show yet.
+    HydrateFallback: () => null,
     children: [
       {
         index: true,

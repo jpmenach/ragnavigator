@@ -1,13 +1,22 @@
+import { useLayoutEffect } from 'react'
 import { Link, Outlet, ScrollRestoration } from 'react-router'
+import { applyTheme } from './theme'
+import type { Organization } from './types'
 
-export function Layout() {
+export function Layout({ organization }: { organization: Organization }) {
+  // Layout effect, not a plain effect: it runs before the browser paints, so the page never
+  // flashes the fallback color first.
+  useLayoutEffect(() => {
+    applyTheme(organization)
+    document.title = organization.name
+  }, [organization])
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      <header className="bg-primary text-white">
+      <header className="bg-primary text-on-primary">
         <div className="mx-auto flex max-w-3xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-4">
-          {/* Hardcoded until there are organization settings to read it from. */}
           <Link to="/" className="text-lg font-semibold">
-            Universidad Nueva Cordillera
+            {organization.name}
           </Link>
           <nav className="flex gap-4 text-sm">
             <Link to="/" className="hover:underline">
@@ -26,5 +35,14 @@ export function Layout() {
           It also scrolls to #anchors, e.g. a category on the home page. */}
       <ScrollRestoration />
     </div>
+  )
+}
+
+// Without the organization there's no name or header to show, so this replaces the layout.
+export function LayoutError() {
+  return (
+    <p className="p-8 text-gray-600">
+      No pudimos cargar el sitio. Intenta de nuevo en unos minutos.
+    </p>
   )
 }

@@ -1,5 +1,5 @@
 import { data } from 'react-router'
-import type { CategoryWithEntries, Entry, LocationWithEntries } from './types'
+import type { CategoryWithEntries, Entry, LocationWithEntries, Organization } from './types'
 
 export async function getEntry(slug: string, signal: AbortSignal): Promise<Entry> {
   const response = await fetch(`/api/entries/${slug}`, { signal })
@@ -26,6 +26,14 @@ export async function getLocations(signal: AbortSignal): Promise<LocationWithEnt
   const response = await fetch('/api/locations', { signal })
   if (!response.ok) {
     throw new Error(`GET /api/locations failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function getOrganization(signal: AbortSignal): Promise<Organization> {
+  const response = await fetch('/api/organization', { signal })
+  if (!response.ok) {
+    throw new Error(`GET /api/organization failed with ${response.status}`)
   }
   return response.json()
 }

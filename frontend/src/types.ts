@@ -54,3 +54,8 @@ export type LocationEntry = {
 export type LocationWithEntries = Location & {
   entries: LocationEntry[]
 }
+
+export type Organization = {
+  name: string
+  primary_color: string
+}

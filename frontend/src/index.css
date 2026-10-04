@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* The organization's theme. Components use these names (bg-primary, text-primary), never a
-   raw color, so another organization's look is a change here and nowhere else. */
+/* The organization's theme. Components use these names (bg-primary, text-on-primary), never
+   a raw color, so another organization's look only changes these variables. */
 @theme {
-  /* Universidad Nueva Cordillera: a deep mountain blue. */
+  /* Fallbacks only: the organization's color is applied at runtime (src/theme.ts). */
   --color-primary: oklch(38% 0.1 255);
+  /* Text on top of the primary color, white or black depending on its lightness. */
+  --color-on-primary: #ffffff;
 }

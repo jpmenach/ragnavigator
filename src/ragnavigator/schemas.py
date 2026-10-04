@@ -62,3 +62,8 @@ class LocationEntryOut(Schema):
 
 class LocationWithEntriesOut(LocationOut):
     entries: list[LocationEntryOut]
+
+
+class OrganizationOut(Schema):
+    name: str
+    primary_color: str
