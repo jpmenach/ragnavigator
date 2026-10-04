@@ -175,3 +175,7 @@ frontend/
   e2e/                      Playwright tests
   demo/record.ts            records the demo clip against the real assistant
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).

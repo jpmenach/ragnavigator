@@ -2,6 +2,9 @@
 name = "ragnavigator"
 version = "0.1.0"
 description = "A catalog site whose assistant answers questions and takes you to where the answer lives"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "jpmenach", email = "jpablo.menachoc@gmail.com" }
 ]
