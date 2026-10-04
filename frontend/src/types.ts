@@ -45,3 +45,12 @@ export type EntrySummary = {
 export type CategoryWithEntries = Category & {
   entries: EntrySummary[]
 }
+
+export type LocationEntry = {
+  role: string
+  entry: EntrySummary
+}
+
+export type LocationWithEntries = Location & {
+  entries: LocationEntry[]
+}

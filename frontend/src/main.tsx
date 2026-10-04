@@ -2,10 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router'
 import { Layout } from './Layout.tsx'
-import { getCategories, getEntry } from './api.ts'
+import { getCategories, getEntry, getLocations } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
 import { HomeError, HomePage } from './pages/HomePage.tsx'
-import type { CategoryWithEntries, Entry } from './types.ts'
+import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
+import type { CategoryWithEntries, Entry, LocationWithEntries } from './types.ts'
 import './index.css'
 
 // Loaders fetch before the page renders, so a page never shows half-loaded. That also
@@ -28,6 +29,12 @@ const router = createBrowserRouter([
         Component: () => <EntryPage entry={useLoaderData<Entry>()} />,
         // Rendered inside the layout, so a missing trámite still shows the header.
         ErrorBoundary: EntryError,
+      },
+      {
+        path: 'locations',
+        loader: ({ request }) => getLocations(request.signal),
+        Component: () => <LocationsPage locations={useLoaderData<LocationWithEntries[]>()} />,
+        ErrorBoundary: LocationsError,
       },
     ],
   },

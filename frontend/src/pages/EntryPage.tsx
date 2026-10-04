@@ -1,5 +1,6 @@
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
-import type { Entry, Location } from '../types'
+import { LocationDetails } from '../components/LocationDetails'
+import type { Entry } from '../types'
 
 // The section ids are part of the page's contract: the assistant will scroll to and
 // highlight them (#requirements, #where-and-when), so they shouldn't change casually.
@@ -67,17 +68,6 @@ export function EntryPage({ entry }: { entry: Entry }) {
         </section>
       )}
     </article>
-  )
-}
-
-function LocationDetails({ location }: { location: Location }) {
-  const place = [location.building, location.floor].filter(Boolean).join(', ')
-  return (
-    <div className="mt-1 space-y-0.5 text-sm text-gray-600">
-      {place && <p>{place}</p>}
-      {location.directions && <p>{location.directions}</p>}
-      {location.hours && <p>{location.hours}</p>}
-    </div>
   )
 }
 
