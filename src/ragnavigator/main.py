@@ -7,14 +7,18 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from ragnavigator.assistant import ask
 from ragnavigator.db import get_session
 from ragnavigator.models import Category, Entry, EntryLocation, Location, Organization
 from ragnavigator.pdf import requirements_pdf
 from ragnavigator.schemas import (
+    AskIn,
+    AskOut,
     CategoryWithEntriesOut,
     EntryOut,
     LocationWithEntriesOut,
     OrganizationOut,
+    SourceOut,
 )
 
 app = FastAPI(title="ragnavigator")
@@ -54,6 +58,31 @@ def get_entry_pdf(slug: str, session: SessionDep) -> Response:
         media_type="application/pdf",
         # "attachment" makes the browser download it, under a name that says what it is.
         headers={"Content-Disposition": f'attachment; filename="requisitos-{slug}.pdf"'},
+    )
+
+
+@app.post("/api/ask")
+def ask_question(body: AskIn, session: SessionDep) -> AskOut:
+    organization = session.scalar(select(Organization).order_by(Organization.id).limit(1))
+    name = organization.name if organization else "this organization"
+    result = ask(body.question, name)
+    if not result.grounded:
+        # Retrieval always returns its closest chunks, even for an unrelated question. Only
+        # sources that backed an answer are worth showing, or navigating to.
+        return AskOut(answer="", grounded=False, sources=[])
+    return AskOut(
+        answer=result.text,
+        grounded=True,
+        sources=[
+            SourceOut(
+                kind=chunk.metadata["kind"],
+                slug=chunk.metadata["slug"],
+                section=chunk.metadata["section"],
+                route=chunk.metadata["route"],
+                score=chunk.score,
+            )
+            for chunk in result.sources
+        ],
     )
 
 

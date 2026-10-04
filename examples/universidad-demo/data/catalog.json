@@ -62,7 +62,7 @@
           "title": "Certificado de notas",
           "slug": "certificado-de-notas",
           "summary": "Documento oficial con las calificaciones de todas las materias cursadas.",
-          "cost": "50 Bs",
+          "cost": "50 bolivianos (Bs)",
           "duration": "3 días hábiles",
           "notes": "El certificado incluye solo materias con nota final registrada. Las materias en curso no aparecen.",
           "requirements": [
@@ -80,7 +80,7 @@
           "title": "Certificado de alumno regular",
           "slug": "certificado-de-alumno-regular",
           "summary": "Constancia de que estás inscrito en la gestión actual.",
-          "cost": "30 Bs",
+          "cost": "30 bolivianos (Bs)",
           "duration": "1 día hábil",
           "notes": "Sirve para trámites externos como seguros, becas o descuentos en transporte. Tiene validez de 30 días.",
           "requirements": [
@@ -113,7 +113,7 @@
           "title": "Cambio de carrera",
           "slug": "cambio-de-carrera",
           "summary": "Pasar de tu carrera actual a otra carrera de la universidad.",
-          "cost": "150 Bs",
+          "cost": "150 bolivianos (Bs)",
           "duration": "10 días hábiles",
           "notes": "Las materias aprobadas se convalidan si existen en el plan de estudios de la nueva carrera. La respuesta se comunica por correo institucional.",
           "requirements": [
@@ -137,7 +137,7 @@
           "title": "Solicitud de diploma académico",
           "slug": "solicitud-de-diploma-academico",
           "summary": "Pedir el diploma académico después de aprobar todas las materias y la modalidad de graduación.",
-          "cost": "800 Bs",
+          "cost": "800 bolivianos (Bs)",
           "duration": "30 días hábiles",
           "notes": "El diploma se recoge en persona. Si otra persona lo recoge, necesita un poder notariado.",
           "requirements": [
@@ -158,7 +158,7 @@
           "title": "Legalización de diploma",
           "slug": "legalizacion-de-diploma",
           "summary": "Obtener copias legalizadas del diploma académico para presentar en otras instituciones.",
-          "cost": "40 Bs por copia",
+          "cost": "40 bolivianos (Bs) por copia",
           "duration": "3 días hábiles",
           "notes": "El diploma original se devuelve en el momento. Las copias legalizadas se recogen en secretaría general.",
           "requirements": [

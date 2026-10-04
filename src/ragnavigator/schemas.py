@@ -1,7 +1,7 @@
-"""What the API returns. Kept apart from the models so the database can change without
+"""What the API takes and returns. Kept apart from the models so the database can change without
 changing the shape the frontend relies on."""
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Schema(BaseModel):
@@ -67,3 +67,23 @@ class LocationWithEntriesOut(LocationOut):
 class OrganizationOut(Schema):
     name: str
     primary_color: str
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+
+
+class SourceOut(BaseModel):
+    kind: str
+    slug: str
+    section: str
+    route: str
+    score: float
+
+
+class AskOut(BaseModel):
+    # Empty when not grounded: the catalog doesn't answer the question, and the frontend
+    # says so in its own words instead of showing a guess.
+    answer: str
+    grounded: bool
+    sources: list[SourceOut]
