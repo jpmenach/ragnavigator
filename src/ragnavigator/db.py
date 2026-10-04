@@ -1,6 +1,8 @@
+from collections.abc import Iterator
 from pathlib import Path
 
 from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session
 
 STORAGE_DIR = Path(__file__).resolve().parents[2] / "storage"
 DB_PATH = STORAGE_DIR / "catalog.db"
@@ -21,3 +23,9 @@ def _set_sqlite_pragmas(dbapi_connection, _connection_record):
     # SQLite ignores foreign keys unless this is on, per connection.
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+
+def get_session() -> Iterator[Session]:
+    """One session per request, closed when the request is done (a FastAPI dependency)."""
+    with Session(engine) as session:
+        yield session
