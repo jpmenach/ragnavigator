@@ -1,0 +1,15 @@
+[project]
+name = "ragnavigator"
+version = "0.1.0"
+description = "A catalog site whose assistant answers questions and takes you to where the answer lives"
+authors = [
+    { name = "jpmenach", email = "jpablo.menachoc@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.142.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.16,<0.13.0"]
+build-backend = "uv_build"
