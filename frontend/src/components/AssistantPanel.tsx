@@ -55,7 +55,7 @@ export function AssistantPanel() {
       )}
 
       <aside
-        className={`${open ? 'flex' : 'hidden'} fixed inset-x-0 bottom-0 z-10 h-[70vh] flex-col rounded-t-xl border border-gray-200 bg-white shadow-lg lg:sticky lg:top-4 lg:flex lg:h-[calc(100vh-2rem)] lg:self-start lg:rounded-xl lg:shadow-none`}
+        className={`${open ? 'flex' : 'hidden'} fixed inset-x-0 bottom-0 z-10 h-[70vh] flex-col rounded-t-xl border border-gray-200 bg-white shadow-lg lg:sticky lg:top-4 lg:flex lg:h-[calc(100vh-8rem)] lg:self-start lg:rounded-xl lg:shadow-none`}
       >
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h2 className="font-semibold">Asistente</h2>
