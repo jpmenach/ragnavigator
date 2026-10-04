@@ -5,12 +5,22 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from ragnavigator.db import get_session
-from ragnavigator.models import Entry, EntryLocation
-from ragnavigator.schemas import EntryOut
+from ragnavigator.models import Category, Entry, EntryLocation
+from ragnavigator.schemas import CategoryWithEntriesOut, EntryOut
 
 app = FastAPI(title="ragnavigator")
 
 SessionDep = Annotated[Session, Depends(get_session)]
+
+
+@app.get("/api/categories")
+def list_categories(session: SessionDep) -> list[CategoryWithEntriesOut]:
+    # The whole catalog in one response: it's a few dozen entries, and both the home page
+    # and a category page need it. Split per category if a catalog ever gets large.
+    categories = session.scalars(
+        select(Category).order_by(Category.id).options(selectinload(Category.entries))
+    )
+    return [CategoryWithEntriesOut.model_validate(c) for c in categories]
 
 
 @app.get("/api/entries/{slug}")

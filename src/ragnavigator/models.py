@@ -13,7 +13,11 @@ class Category(Base):
     name: Mapped[str]
     slug: Mapped[str] = mapped_column(unique=True)
 
-    entries: Mapped[list["Entry"]] = relationship(back_populates="category")
+    # In the order they were entered: the catalog file's order is curated, and sorting by
+    # title in SQLite would put accented titles ("Área…") after "Z".
+    entries: Mapped[list["Entry"]] = relationship(
+        back_populates="category", order_by="Entry.id"
+    )
 
 
 class Entry(Base):

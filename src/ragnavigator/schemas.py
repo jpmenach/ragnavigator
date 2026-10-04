@@ -43,3 +43,13 @@ class EntryOut(Schema):
     category: CategoryOut
     requirements: list[RequirementOut]
     locations: list[EntryLocationOut]
+
+
+class EntrySummaryOut(Schema):
+    title: str
+    slug: str
+    summary: str
+
+
+class CategoryWithEntriesOut(CategoryOut):
+    entries: list[EntrySummaryOut]
