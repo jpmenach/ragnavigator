@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from ragnavigator.db import get_session
 from ragnavigator.models import Category, Entry, EntryLocation, Location
+from ragnavigator.pdf import requirements_pdf
 from ragnavigator.schemas import CategoryWithEntriesOut, EntryOut, LocationWithEntriesOut
 
 app = FastAPI(title="ragnavigator")
@@ -25,8 +26,23 @@ def list_categories(session: SessionDep) -> list[CategoryWithEntriesOut]:
 
 @app.get("/api/entries/{slug}")
 def get_entry(slug: str, session: SessionDep) -> EntryOut:
-    # Load everything the page shows in one go (a few queries, not one per requirement
-    # or location), while the session is still open.
+    return EntryOut.model_validate(_load_entry(session, slug))
+
+
+@app.get("/api/entries/{slug}/requirements.pdf")
+def get_entry_pdf(slug: str, session: SessionDep) -> Response:
+    entry = _load_entry(session, slug)
+    return Response(
+        requirements_pdf(entry),
+        media_type="application/pdf",
+        # "attachment" makes the browser download it, under a name that says what it is.
+        headers={"Content-Disposition": f'attachment; filename="requisitos-{slug}.pdf"'},
+    )
+
+
+def _load_entry(session: Session, slug: str) -> Entry:
+    # Everything the page and the PDF show, in one go (a few queries, not one per
+    # requirement or location), while the session is still open.
     entry = session.scalar(
         select(Entry)
         .where(Entry.slug == slug)
@@ -38,7 +54,7 @@ def get_entry(slug: str, session: SessionDep) -> EntryOut:
     )
     if entry is None:
         raise HTTPException(status_code=404, detail="Entry not found")
-    return EntryOut.model_validate(entry)
+    return entry
 
 
 @app.get("/api/locations")
