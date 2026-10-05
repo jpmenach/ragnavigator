@@ -1,13 +1,23 @@
 import re
 
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import ForeignKey, MetaData, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
 
 HEX_COLOR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 class Base(DeclarativeBase):
-    pass
+    # Every constraint gets a predictable name. Migrations refer to constraints by name, and
+    # SQLite's batch mode can't change or drop one that was created without a name.
+    metadata = MetaData(
+        naming_convention={
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_%(constraint_name)s",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        }
+    )
 
 
 class Organization(Base):
