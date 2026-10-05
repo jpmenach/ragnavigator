@@ -124,6 +124,7 @@ git clone https://github.com/jpmenach/ragstarter
 git clone https://github.com/jpmenach/ragnavigator
 cd ragnavigator
 uv sync
+uv run alembic upgrade head                # create (or update) the database tables
 uv run python -m ragnavigator.seed examples/universidad-demo/data/catalog.json
 uv run python -m ragnavigator.indexing     # first run downloads bge-m3 (~2.3 GB)
 ```
@@ -158,12 +159,13 @@ src/ragnavigator/
   db.py          SQLite engine (WAL, foreign keys on) and the per-request session
   models.py      catalog: organization, categories, entries, requirements, places
   schemas.py     what the API takes and returns, including the action types
-  seed.py        load a catalog JSON into SQLite (drops and recreates the tables)
+  seed.py        replace the catalog's content with a JSON file (one transaction)
   indexing.py    catalog → one document per section, with its route → ragstarter index
   assistant.py   ask the index (ragstarter's answer())
   actions.py     top source → navigate / highlight / offer_download
   pdf.py         requirements sheet per entry (fpdf2)
   main.py        FastAPI: catalog API, /api/ask, PDFs, and the built frontend
+migrations/       database schema history (Alembic)
 examples/universidad-demo/
   data/catalog.json         the fictional university's content (Spanish)
   scripts/query_test.py     evaluation

@@ -1,9 +1,11 @@
-"""Rebuild the catalog database from a JSON file.
+"""Replace the catalog's content with the contents of a JSON file.
 
-Until there's an admin to edit the catalog, the JSON file is the source and the database is
-disposable: every run drops all tables and loads the file again.
+The tables themselves belong to the migrations, so create or update them first. Every run
+deletes all rows and loads the file again, in one transaction: if loading fails, the
+previous content stays.
 
 Run from the repo root with:
+    uv run alembic upgrade head
     uv run python -m ragnavigator.seed examples/universidad-demo/data/catalog.json
 """
 
@@ -28,10 +30,12 @@ from ragnavigator.models import (
 def seed(catalog_path: Path) -> None:
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
-
     with Session(engine) as session:
+        # Children before parents (the reverse of creation order), so no row is ever left
+        # pointing at one that's gone.
+        for table in reversed(Base.metadata.sorted_tables):
+            session.execute(table.delete())
+
         session.add(Organization(**catalog["organization"]))
 
         # Entries refer to locations by slug, so they're created first and looked up here.
