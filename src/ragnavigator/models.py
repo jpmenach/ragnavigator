@@ -141,3 +141,15 @@ class EntryLocation(Base):
 
     entry: Mapped[Entry] = relationship(back_populates="locations")
     location: Mapped[Location] = relationship(back_populates="entries")
+
+
+class AdminUser(Base):
+    """Someone who can edit the catalog. Created from the command line
+    (`python -m ragnavigator.create_admin`), never by signing up on the site."""
+
+    __tablename__ = "admin_user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(unique=True)
+    # Argon2 hash; the password itself is never stored.
+    password_hash: Mapped[str]

@@ -13,11 +13,11 @@ import json
 import sys
 from pathlib import Path
 
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from ragnavigator.db import DB_PATH, engine
 from ragnavigator.models import (
-    Base,
     Category,
     Entry,
     EntryLocation,
@@ -31,10 +31,10 @@ def seed(catalog_path: Path) -> None:
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
 
     with Session(engine) as session:
-        # Children before parents (the reverse of creation order), so no row is ever left
-        # pointing at one that's gone.
-        for table in reversed(Base.metadata.sorted_tables):
-            session.execute(table.delete())
+        # Only the catalog: admins and anything else in the database stay. Children before
+        # parents, so no row is ever left pointing at one that's gone.
+        for model in (EntryLocation, Requirement, Entry, Category, Location, Organization):
+            session.execute(delete(model))
 
         session.add(Organization(**catalog["organization"]))
 
