@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from sqlalchemy import ForeignKey, MetaData, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, validates
@@ -153,3 +154,18 @@ class AdminUser(Base):
     username: Mapped[str] = mapped_column(unique=True)
     # Argon2 hash; the password itself is never stored.
     password_hash: Mapped[str]
+
+
+class AdminSession(Base):
+    """A login: the browser holds a random token in a cookie, this row holds its hash."""
+
+    __tablename__ = "admin_session"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    admin_id: Mapped[int] = mapped_column(ForeignKey("admin_user.id", ondelete="CASCADE"))
+    # SHA-256 of the token, so a copy of the database can't be used to log in. A fast hash
+    # is enough: the token is random, not a password someone could guess.
+    token_hash: Mapped[str] = mapped_column(unique=True)
+    # UTC. SQLite has no time zones, so these are stored and read back without one.
+    created_at: Mapped[datetime]
+    expires_at: Mapped[datetime]
