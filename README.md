@@ -146,6 +146,7 @@ uv run fastapi run src/ragnavigator/main.py   # http://localhost:8000
 Tests and evaluation:
 
 ```bash
+uv run pytest                                                   # backend tests
 uv run python examples/universidad-demo/scripts/query_test.py   # needs Ollama
 cd frontend && npx playwright install chromium && npm run test:e2e
 # on Linux, Chromium also needs system libraries (once):
@@ -166,6 +167,7 @@ src/ragnavigator/
   pdf.py         requirements sheet per entry (fpdf2)
   main.py        FastAPI: catalog API, /api/ask, PDFs, and the built frontend
 migrations/       database schema history (Alembic)
+tests/            backend tests (pytest), each on a throwaway database
 examples/universidad-demo/
   data/catalog.json         the fictional university's content (Spanish)
   scripts/query_test.py     evaluation

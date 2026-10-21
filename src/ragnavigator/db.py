@@ -3,17 +3,20 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import create_engine, event
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session
 
 STORAGE_DIR = Path(__file__).resolve().parents[2] / "storage"
 DB_PATH = STORAGE_DIR / "catalog.db"
 
-STORAGE_DIR.mkdir(exist_ok=True)
-engine = create_engine(f"sqlite:///{DB_PATH}")
+
+def create_sqlite_engine(path: Path) -> Engine:
+    """An engine with the pragmas below. Tests use it for a throwaway database."""
+    engine = create_engine(f"sqlite:///{path}")
+    event.listen(engine, "connect", _set_sqlite_pragmas)
+    return engine
 
 
-@event.listens_for(engine, "connect")
 def _set_sqlite_pragmas(dbapi_connection, _connection_record):
     cursor = dbapi_connection.cursor()
     # Readers don't block the writer and vice versa: the site keeps serving pages while an
@@ -25,6 +28,10 @@ def _set_sqlite_pragmas(dbapi_connection, _connection_record):
     # SQLite ignores foreign keys unless this is on, per connection.
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+
+STORAGE_DIR.mkdir(exist_ok=True)
+engine = create_sqlite_engine(DB_PATH)
 
 
 def get_session() -> Iterator[Session]:

@@ -27,3 +27,9 @@ ragstarter = { path = "../ragstarter", editable = true }
 
 [tool.alembic]
 script_location = "migrations"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.15.1",
+    "pytest>=9.1.1",
+]
