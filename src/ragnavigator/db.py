@@ -1,6 +1,8 @@
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
@@ -29,3 +31,6 @@ def get_session() -> Iterator[Session]:
     """One session per request, closed when the request is done (a FastAPI dependency)."""
     with Session(engine) as session:
         yield session
+
+
+SessionDep = Annotated[Session, Depends(get_session)]

@@ -9,12 +9,12 @@ Run from the repo root with:
 import sys
 from getpass import getpass
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ragnavigator.auth import hash_password
 from ragnavigator.db import engine
-from ragnavigator.models import AdminUser
+from ragnavigator.models import AdminSession, AdminUser
 
 MIN_PASSWORD_LENGTH = 12
 
@@ -33,6 +33,8 @@ def main(username: str) -> None:
             action = "Created"
         else:
             admin.password_hash = hash_password(password)
+            # A new password usually means the old one leaked: log out every browser.
+            session.execute(delete(AdminSession).where(AdminSession.admin_id == admin.id))
             action = "Updated the password of"
         session.commit()
     print(f"{action} admin {username!r}")

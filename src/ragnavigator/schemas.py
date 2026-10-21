@@ -115,3 +115,13 @@ class AskOut(BaseModel):
     grounded: bool
     sources: list[SourceOut]
     actions: list[Action]
+
+
+class LoginIn(BaseModel):
+    # Generous limits, but limits: Argon2 would otherwise hash a password of any size.
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=200)
+
+
+class AdminOut(Schema):
+    username: str

@@ -169,3 +169,5 @@ class AdminSession(Base):
     # UTC. SQLite has no time zones, so these are stored and read back without one.
     created_at: Mapped[datetime]
     expires_at: Mapped[datetime]
+
+    admin: Mapped[AdminUser] = relationship()

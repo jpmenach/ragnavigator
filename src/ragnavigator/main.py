@@ -1,15 +1,15 @@
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from ragnavigator import admin
 from ragnavigator.actions import actions_for
 from ragnavigator.assistant import ask
-from ragnavigator.db import get_session
+from ragnavigator.db import SessionDep
 from ragnavigator.models import Category, Entry, EntryLocation, Location, Organization
 from ragnavigator.pdf import requirements_pdf
 from ragnavigator.schemas import (
@@ -23,8 +23,7 @@ from ragnavigator.schemas import (
 )
 
 app = FastAPI(title="ragnavigator")
-
-SessionDep = Annotated[Session, Depends(get_session)]
+app.include_router(admin.router)
 
 
 @app.get("/api/organization")
