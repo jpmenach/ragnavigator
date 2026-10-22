@@ -20,8 +20,8 @@ from ragnavigator.auth import (
     verify_password,
 )
 from ragnavigator.db import SessionDep
-from ragnavigator.models import AdminSession, AdminUser
-from ragnavigator.schemas import AdminOut, LoginIn
+from ragnavigator.models import AdminSession, AdminUser, Entry
+from ragnavigator.schemas import AdminOut, EntryTextIn, LoginIn
 
 COOKIE_NAME = "ragnavigator_session"
 COOKIE_PATH = "/api/admin"
@@ -99,3 +99,16 @@ def logout(session: SessionDep, response: Response, token: SessionToken = None) 
 def me(admin: CurrentAdmin) -> AdminOut:
     """Who's logged in. The frontend asks this to decide between the editor and the login."""
     return AdminOut.model_validate(admin)
+
+
+@router.put("/entries/{slug}", status_code=204)
+def update_entry_text(
+    slug: str, body: EntryTextIn, session: SessionDep, admin: CurrentAdmin
+) -> None:
+    entry = session.scalar(select(Entry).where(Entry.slug == slug))
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    for field, value in body.model_dump().items():
+        # A blank optional field means "not set", the same as leaving it out of the catalog.
+        setattr(entry, field, value or None)
+    session.commit()

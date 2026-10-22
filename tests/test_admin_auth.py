@@ -5,11 +5,7 @@ from sqlalchemy import select
 from ragnavigator.admin import COOKIE_NAME
 from ragnavigator.auth import hash_token, new_session_token, utcnow
 from ragnavigator.models import AdminSession
-from tests.conftest import ADMIN_PASSWORD
-
-
-def log_in(client, username="ana", password=ADMIN_PASSWORD):
-    return client.post("/api/admin/login", json={"username": username, "password": password})
+from tests.conftest import log_in
 
 
 def test_me_needs_a_login(client):

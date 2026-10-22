@@ -42,3 +42,7 @@ def admin(db) -> AdminUser:
     db.add(admin)
     db.commit()
     return admin
+
+
+def log_in(client, username="ana", password=ADMIN_PASSWORD):
+    return client.post("/api/admin/login", json={"username": username, "password": password})
