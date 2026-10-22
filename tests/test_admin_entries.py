@@ -35,6 +35,14 @@ def test_saving_replaces_the_text_and_the_site_shows_it(client, admin, entry):
     assert {field: page[field] for field in TEXT} == TEXT
 
 
+def test_saving_reindexes_the_entry(client, admin, entry, reindexed):
+    log_in(client)
+
+    client.put("/api/admin/entries/certificado-de-notas", json=TEXT)
+
+    assert reindexed == ["certificado-de-notas"]
+
+
 def test_blank_optional_fields_are_saved_as_not_set(client, admin, entry):
     log_in(client)
 
@@ -43,13 +51,14 @@ def test_blank_optional_fields_are_saved_as_not_set(client, admin, entry):
     assert client.get("/api/entries/certificado-de-notas").json()["cost"] is None
 
 
-def test_title_and_summary_are_required(client, admin, entry):
+def test_title_and_summary_are_required(client, admin, entry, reindexed):
     log_in(client)
 
     response = client.put("/api/admin/entries/certificado-de-notas", json=TEXT | {"title": " "})
 
     assert response.status_code == 422
     assert client.get("/api/entries/certificado-de-notas").json()["title"] == "Certificado"
+    assert reindexed == []
 
 
 def test_an_unknown_entry_is_a_404(client, admin):

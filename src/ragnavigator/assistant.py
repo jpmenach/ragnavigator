@@ -21,6 +21,13 @@ def ask(question: str) -> Answer:
     return answer(question, index, llm)
 
 
+def live_index() -> VectorStoreIndex:
+    """The index questions are answered from. Edits go into this same object, so answers
+    follow them without reloading anything."""
+    index, _llm = _engine()
+    return index
+
+
 @cache
 def _engine() -> tuple[VectorStoreIndex, LLM]:
     # Loading the index loads the embedding model (bge-m3, ~2 GB), which takes seconds.

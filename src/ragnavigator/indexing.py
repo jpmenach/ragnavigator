@@ -10,8 +10,12 @@ Run from the repo root (after seeding) with:
     uv run python -m ragnavigator.indexing
 """
 
-from llama_index.core import Document
-from ragstarter.core.ingest import build_index_from_documents
+from llama_index.core import Document, VectorStoreIndex
+from ragstarter.core.ingest import (
+    build_index_from_documents,
+    delete_documents,
+    replace_documents,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -19,6 +23,10 @@ from ragnavigator.db import STORAGE_DIR, engine
 from ragnavigator.models import Entry, EntryLocation, Location
 
 INDEX_DIR = STORAGE_DIR / "chroma"
+
+# Every section an entry can have a document for. Notes are optional, so an entry may have
+# fewer: re-indexing deletes the ones it no longer has.
+ENTRY_SECTIONS = ("summary", "requirements", "where-and-when", "notes")
 
 
 def entry_documents(entry: Entry) -> list[Document]:
@@ -112,6 +120,23 @@ def build_catalog_index() -> int:
     return len(documents)
 
 
+def reindex_entry(index: VectorStoreIndex, entry: Entry) -> None:
+    """Bring a live index up to date with an edited entry, without rebuilding the rest.
+
+    The entry's places are included: their documents name the entry, so a new title has to
+    reach them too.
+    """
+    documents = entry_documents(entry)
+    # A place can appear twice for one entry (request and pick up at the same counter).
+    places = {link.location.slug: link.location for link in entry.locations}
+    documents += [location_document(location) for location in places.values()]
+
+    current = {document.doc_id for document in documents}
+    every_section = [_document_id("entry", entry.slug, section) for section in ENTRY_SECTIONS]
+    delete_documents(index, [id_ for id_ in every_section if id_ not in current])
+    replace_documents(index, documents)
+
+
 def _describe_location(location: Location) -> str:
     parts = [location.name]
     place = ", ".join(part for part in (location.building, location.floor) if part)
@@ -128,10 +153,17 @@ def _describe_location(location: Location) -> str:
 def _document(text: str, kind: str, slug: str, section: str, route: str) -> Document:
     metadata = {"kind": kind, "slug": slug, "section": section, "route": route}
     return Document(
+        # Stable, so an edit can replace exactly this document in the index.
+        id_=_document_id(kind, slug, section),
         text=text,
         metadata=metadata,
         excluded_embed_metadata_keys=list(metadata),
     )
+
+
+
+def _document_id(kind: str, slug: str, section: str) -> str:
+    return f"{kind}/{slug}/{section}"
 
 
 if __name__ == "__main__":

@@ -107,10 +107,14 @@ All with the local `llama3.1:8b`.
   though the catalog says first aid yes, serious emergencies go to the hospital.
 - **One destination per answer.** Navigation follows the top source only. A question
   about two places ("where do I request it and where do I pay?") opens one of them.
-- **No admin yet.** The catalog is edited in `examples/universidad-demo/data/catalog.json`
-  and loaded with the seed script; the index is rebuilt by hand. Restart the server after
-  rebuilding the index: a running server keeps the old one loaded, and its next answer
-  fails.
+- **The admin is in progress.** At `/admin`, an entry's text can be edited, and saving
+  re-indexes just that entry (about a second), so the assistant answers with the new text
+  right away. Categories, requirements, places and new entries still come from
+  `examples/universidad-demo/data/catalog.json` through the seed script, which replaces
+  the whole catalog.
+- **One server process.** Edits go into the index the server has loaded, so with several
+  worker processes the others wouldn't see them. A full rebuild from the command line
+  (`python -m ragnavigator.indexing`) still needs a server restart afterwards.
 
 ## Running it
 

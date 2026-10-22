@@ -11,6 +11,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
 
+from ragnavigator.assistant import live_index
 from ragnavigator.auth import (
     DUMMY_PASSWORD_HASH,
     SESSION_LIFETIME,
@@ -20,6 +21,7 @@ from ragnavigator.auth import (
     verify_password,
 )
 from ragnavigator.db import SessionDep
+from ragnavigator.indexing import reindex_entry
 from ragnavigator.models import AdminSession, AdminUser, Entry
 from ragnavigator.schemas import AdminOut, EntryTextIn, LoginIn
 
@@ -112,3 +114,7 @@ def update_entry_text(
         # A blank optional field means "not set", the same as leaving it out of the catalog.
         setattr(entry, field, value or None)
     session.commit()
+    # Before responding, so "saved" in the admin also means the assistant answers with the
+    # new text. If the server hasn't loaded the index yet, this first save loads it (the
+    # embedding model takes ~20 s); after that it's about a second.
+    reindex_entry(live_index(), entry)

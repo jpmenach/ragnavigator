@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from ragnavigator import admin as admin_api
 from ragnavigator.auth import hash_password
 from ragnavigator.db import create_sqlite_engine, get_session
 from ragnavigator.main import app
@@ -28,6 +29,16 @@ def db(tmp_path) -> Iterator[Session]:
         yield session
     app.dependency_overrides.clear()
     engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def reindexed(monkeypatch) -> list[str]:
+    """Saving an entry re-indexes it in the assistant's live index. Tests record which
+    entries were re-indexed instead, so they never load the embedding model."""
+    slugs: list[str] = []
+    monkeypatch.setattr(admin_api, "live_index", lambda: None)
+    monkeypatch.setattr(admin_api, "reindex_entry", lambda _index, entry: slugs.append(entry.slug))
+    return slugs
 
 
 @pytest.fixture
