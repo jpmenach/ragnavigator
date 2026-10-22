@@ -1,6 +1,6 @@
 import { redirect } from 'react-router'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
-import { getCurrentAdmin, logIn, logOut } from './api'
+import { getCurrentAdmin, logIn, logOut, updateEntryText } from './api'
 
 // Loaders and actions for the admin pages. Kept out of the page files so Vite's fast
 // refresh can still swap those components in place while editing them.
@@ -35,4 +35,20 @@ export async function loginAction({ request }: ActionFunctionArgs) {
 export async function logoutAction() {
   await logOut()
   return redirect('/admin/login')
+}
+
+export async function saveEntryAction({ params, request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const field = (name: string) => String(form.get(name))
+  const saved = await updateEntryText(params.slug!, {
+    title: field('title'),
+    summary: field('summary'),
+    cost: field('cost'),
+    duration: field('duration'),
+    notes: field('notes'),
+  })
+  if (!saved) {
+    return redirect('/admin/login')
+  }
+  return { saved: true }
 }

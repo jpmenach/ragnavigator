@@ -4,6 +4,7 @@ import type {
   AskResponse,
   CategoryWithEntries,
   Entry,
+  EntryText,
   LocationWithEntries,
   Organization,
 } from './types'
@@ -91,4 +92,20 @@ export async function logOut(): Promise<void> {
   if (!response.ok) {
     throw new Error(`POST /api/admin/logout failed with ${response.status}`)
   }
+}
+
+// false when the session is gone (expired, or logged out in another tab).
+export async function updateEntryText(slug: string, text: EntryText): Promise<boolean> {
+  const response = await fetch(`/api/admin/entries/${slug}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(text),
+  })
+  if (response.status === 401) {
+    return false
+  }
+  if (!response.ok) {
+    throw new Error(`PUT /api/admin/entries/${slug} failed with ${response.status}`)
+  }
+  return true
 }

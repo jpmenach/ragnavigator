@@ -2,11 +2,10 @@ import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
 // The admin API is replaced with a small fake that remembers whether someone logged in.
-// These tests check what the pages do (redirects, the error, logging out); sessions and
-// cookies are checked against the real API by the backend tests (tests/test_admin_auth.py),
-// and a fake keeps admins out of the database these tests share with the site.
-async function fakeAdminApi(page: Page) {
-  let loggedIn = false
+// These tests check what the pages do (redirects, the error, logging out, what a save
+// sends); sessions, cookies and saving are checked against the real API by the backend
+// tests (tests/), and a fake keeps the database these tests share with the site unchanged.
+async function fakeAdminApi(page: Page, { loggedIn = false } = {}) {
   await page.route('**/api/admin/me', (route) =>
     loggedIn
       ? route.fulfill({ json: { username: 'ana' } })
@@ -57,4 +56,22 @@ test('logging in opens the admin, and logging out leaves it', async ({ page }) =
   await expect(page).toHaveURL(/\/admin\/login$/)
   await page.goto('/admin')
   await expect(page).toHaveURL(/\/admin\/login$/)
+})
+
+test('editing an entry sends the form and says it saved', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let saved: unknown
+  await page.route('**/api/admin/entries/certificado-de-notas', (route) => {
+    saved = route.request().postDataJSON()
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin')
+  await page.getByRole('link', { name: 'Certificado de notas' }).click()
+
+  await expect(page.getByLabel('Título')).toHaveValue('Certificado de notas')
+  await page.getByLabel('Costo').fill('60 bolivianos (Bs)')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Guardado.')
+  expect(saved).toMatchObject({ title: 'Certificado de notas', cost: '60 bolivianos (Bs)' })
 })

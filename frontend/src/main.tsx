@@ -2,12 +2,20 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router'
 import { Layout, LayoutError } from './Layout.tsx'
-import { adminLoader, loginAction, loginLoader, logoutAction } from './adminRoutes.ts'
+import {
+  adminLoader,
+  loginAction,
+  loginLoader,
+  logoutAction,
+  saveEntryAction,
+} from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
 import { HomeError, HomePage } from './pages/HomePage.tsx'
 import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
-import { AdminError, AdminPage } from './pages/admin/AdminPage.tsx'
+import { AdminEntriesPage } from './pages/admin/AdminEntriesPage.tsx'
+import { AdminError, AdminLayout } from './pages/admin/AdminLayout.tsx'
+import { EntryFormPage } from './pages/admin/EntryFormPage.tsx'
 import { LoginPage } from './pages/admin/LoginPage.tsx'
 import type {
   Admin,
@@ -56,8 +64,25 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     loader: adminLoader,
-    Component: () => <AdminPage admin={useLoaderData<Admin>()} />,
+    Component: () => <AdminLayout admin={useLoaderData<Admin>()} />,
     ErrorBoundary: AdminError,
+    HydrateFallback: () => null,
+    // The same public endpoints the site reads: the admin edits what people see.
+    children: [
+      {
+        index: true,
+        loader: ({ request }) => getCategories(request.signal),
+        Component: () => <AdminEntriesPage categories={useLoaderData<CategoryWithEntries[]>()} />,
+        ErrorBoundary: HomeError,
+      },
+      {
+        path: 'entries/:slug',
+        loader: ({ params, request }) => getEntry(params.slug!, request.signal),
+        action: saveEntryAction,
+        Component: () => <EntryFormPage entry={useLoaderData<Entry>()} />,
+        ErrorBoundary: EntryError,
+      },
+    ],
   },
   {
     path: '/admin/login',
@@ -65,6 +90,7 @@ const router = createBrowserRouter([
     action: loginAction,
     Component: LoginPage,
     ErrorBoundary: AdminError,
+    HydrateFallback: () => null,
   },
   { path: '/admin/logout', action: logoutAction, ErrorBoundary: AdminError },
 ])

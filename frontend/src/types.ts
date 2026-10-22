@@ -84,3 +84,6 @@ export type AskResponse = {
 export type Admin = {
   username: string
 }
+
+// What the admin form saves: the entry's own text (EntryTextIn in schemas.py).
+export type EntryText = Pick<Entry, 'title' | 'summary' | 'cost' | 'duration' | 'notes'>
