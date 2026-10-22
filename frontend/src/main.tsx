@@ -2,11 +2,20 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router'
 import { Layout, LayoutError } from './Layout.tsx'
+import { adminLoader, loginAction, loginLoader, logoutAction } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
 import { HomeError, HomePage } from './pages/HomePage.tsx'
 import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
-import type { CategoryWithEntries, Entry, LocationWithEntries, Organization } from './types.ts'
+import { AdminError, AdminPage } from './pages/admin/AdminPage.tsx'
+import { LoginPage } from './pages/admin/LoginPage.tsx'
+import type {
+  Admin,
+  CategoryWithEntries,
+  Entry,
+  LocationWithEntries,
+  Organization,
+} from './types.ts'
 import './index.css'
 
 // Loaders fetch before the page renders, so a page never shows half-loaded. That also
@@ -43,6 +52,21 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Outside the public layout: no assistant panel, and none of the site's navigation.
+  {
+    path: '/admin',
+    loader: adminLoader,
+    Component: () => <AdminPage admin={useLoaderData<Admin>()} />,
+    ErrorBoundary: AdminError,
+  },
+  {
+    path: '/admin/login',
+    loader: loginLoader,
+    action: loginAction,
+    Component: LoginPage,
+    ErrorBoundary: AdminError,
+  },
+  { path: '/admin/logout', action: logoutAction, ErrorBoundary: AdminError },
 ])
 
 createRoot(document.getElementById('root')!).render(

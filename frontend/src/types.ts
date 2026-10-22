@@ -80,3 +80,7 @@ export type AskResponse = {
   sources: Source[]
   actions: Action[]
 }
+
+export type Admin = {
+  username: string
+}

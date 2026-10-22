@@ -1,5 +1,6 @@
 import { data } from 'react-router'
 import type {
+  Admin,
   AskResponse,
   CategoryWithEntries,
   Entry,
@@ -54,4 +55,40 @@ export async function askQuestion(question: string): Promise<AskResponse> {
     throw new Error(`POST /api/ask failed with ${response.status}`)
   }
   return response.json()
+}
+
+// The session lives in an HttpOnly cookie the browser sends on its own; this code never
+// sees the token. Asking the server is the only way to know whether someone is logged in.
+export async function getCurrentAdmin(signal: AbortSignal): Promise<Admin | null> {
+  const response = await fetch('/api/admin/me', { signal })
+  if (response.status === 401) {
+    return null
+  }
+  if (!response.ok) {
+    throw new Error(`GET /api/admin/me failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+// null for a wrong username or password: the login form shows that, it isn't an error.
+export async function logIn(username: string, password: string): Promise<Admin | null> {
+  const response = await fetch('/api/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  })
+  if (response.status === 401) {
+    return null
+  }
+  if (!response.ok) {
+    throw new Error(`POST /api/admin/login failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function logOut(): Promise<void> {
+  const response = await fetch('/api/admin/logout', { method: 'POST' })
+  if (!response.ok) {
+    throw new Error(`POST /api/admin/logout failed with ${response.status}`)
+  }
 }
