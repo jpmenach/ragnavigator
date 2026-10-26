@@ -138,3 +138,9 @@ class EntryTextIn(BaseModel):
     cost: str | None = Field(default=None, max_length=200)
     duration: str | None = Field(default=None, max_length=200)
     notes: str | None = Field(default=None, max_length=5000)
+
+
+class CategoryIn(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=100)

@@ -9,7 +9,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy import delete, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import Session, joinedload
 
 from ragnavigator.assistant import live_index
 from ragnavigator.auth import (
@@ -22,8 +22,9 @@ from ragnavigator.auth import (
 )
 from ragnavigator.db import SessionDep
 from ragnavigator.indexing import reindex_entry
-from ragnavigator.models import AdminSession, AdminUser, Entry
-from ragnavigator.schemas import AdminOut, EntryTextIn, LoginIn
+from ragnavigator.models import AdminSession, AdminUser, Category, Entry
+from ragnavigator.schemas import AdminOut, CategoryIn, CategoryOut, EntryTextIn, LoginIn
+from ragnavigator.slugs import slugify
 
 COOKIE_NAME = "ragnavigator_session"
 COOKIE_PATH = "/api/admin"
@@ -118,3 +119,49 @@ def update_entry_text(
     # new text. If the server hasn't loaded the index yet, this first save loads it (the
     # embedding model takes ~20 s); after that it's about a second.
     reindex_entry(live_index(), entry)
+
+
+@router.post("/categories", status_code=201)
+def create_category(body: CategoryIn, session: SessionDep, admin: CurrentAdmin) -> CategoryOut:
+    # The slug comes from the name once and stays: it's in the home page's #anchors.
+    slug = slugify(body.name)
+    if not slug:
+        raise HTTPException(status_code=422, detail="The name needs a letter or a number")
+    if session.scalar(select(Category.id).where(Category.slug == slug)) is not None:
+        raise HTTPException(status_code=409, detail="There's already a category with that name")
+    category = Category(name=body.name, slug=slug)
+    session.add(category)
+    session.commit()
+    return CategoryOut.model_validate(category)
+
+
+@router.put("/categories/{slug}", status_code=204)
+def rename_category(
+    slug: str, body: CategoryIn, session: SessionDep, admin: CurrentAdmin
+) -> None:
+    """Change the name; the slug stays, so links to the category keep working."""
+    category = _get_category(session, slug)
+    category.name = body.name
+    session.commit()
+    # Each entry's summary document says which category it's in.
+    if category.entries:
+        index = live_index()
+        for entry in category.entries:
+            reindex_entry(index, entry)
+
+
+@router.delete("/categories/{slug}", status_code=204)
+def delete_category(slug: str, session: SessionDep, admin: CurrentAdmin) -> None:
+    category = _get_category(session, slug)
+    # Only when empty: deleting its entries along with it would be too easy by mistake.
+    if category.entries:
+        raise HTTPException(status_code=409, detail="The category still has entries")
+    session.delete(category)
+    session.commit()
+
+
+def _get_category(session: Session, slug: str) -> Category:
+    category = session.scalar(select(Category).where(Category.slug == slug))
+    if category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
