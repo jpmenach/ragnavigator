@@ -80,9 +80,9 @@ export function EntryFormPage({ entry }: { entry: Entry }) {
           >
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
-          {result?.saved && !saving && (
+          {result && !saving && (
             <p role="status" className="text-sm text-gray-600">
-              Guardado.
+              {result.saved ? 'Guardado.' : 'No se pudo guardar: revisa los campos.'}
             </p>
           )}
         </div>

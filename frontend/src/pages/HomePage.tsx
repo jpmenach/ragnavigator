@@ -2,6 +2,9 @@ import { Link } from 'react-router'
 import type { CategoryWithEntries } from '../types'
 
 export function HomePage({ categories }: { categories: CategoryWithEntries[] }) {
+  // A category just created in the admin has no entries yet: nothing to show for it.
+  const shown = categories.filter((category) => category.entries.length > 0)
+
   return (
     <>
       <h1 className="text-3xl font-bold">Trámites y servicios</h1>
@@ -9,7 +12,7 @@ export function HomePage({ categories }: { categories: CategoryWithEntries[] }) 
         Requisitos, costos, lugares y horarios de cada trámite.
       </p>
 
-      {categories.map((category) => (
+      {shown.map((category) => (
         <section key={category.slug} id={category.slug} className="mt-10">
           <h2 className="text-sm font-medium tracking-wide text-primary uppercase">
             {category.name}

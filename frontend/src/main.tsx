@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider, useLoaderData } from 'react-router
 import { Layout, LayoutError } from './Layout.tsx'
 import {
   adminLoader,
+  categoriesAction,
   loginAction,
   loginLoader,
   logoutAction,
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       {
         index: true,
         loader: ({ request }) => getCategories(request.signal),
+        action: categoriesAction,
         Component: () => <AdminEntriesPage categories={useLoaderData<CategoryWithEntries[]>()} />,
         ErrorBoundary: HomeError,
       },

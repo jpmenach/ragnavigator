@@ -94,18 +94,45 @@ export async function logOut(): Promise<void> {
   }
 }
 
-// false when the session is gone (expired, or logged out in another tab).
-export async function updateEntryText(slug: string, text: EntryText): Promise<boolean> {
-  const response = await fetch(`/api/admin/entries/${slug}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(text),
+// How an admin write ended, for the cases the page explains instead of failing:
+// 'logged-out' when the session is gone (expired, or logged out in another tab),
+// 'conflict' when the server refuses it as things stand (409), 'invalid' when it rejects
+// the input (422) despite the form's own checks.
+export type AdminWrite = 'done' | 'logged-out' | 'conflict' | 'invalid'
+
+async function adminWrite(method: string, path: string, body?: unknown): Promise<AdminWrite> {
+  const response = await fetch(path, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (response.status === 401) {
-    return false
+    return 'logged-out'
+  }
+  if (response.status === 409) {
+    return 'conflict'
+  }
+  if (response.status === 422) {
+    return 'invalid'
   }
   if (!response.ok) {
-    throw new Error(`PUT /api/admin/entries/${slug} failed with ${response.status}`)
+    throw new Error(`${method} ${path} failed with ${response.status}`)
   }
-  return true
+  return 'done'
+}
+
+export function updateEntryText(slug: string, text: EntryText): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/entries/${slug}`, text)
+}
+
+export function createCategory(name: string): Promise<AdminWrite> {
+  return adminWrite('POST', '/api/admin/categories', { name })
+}
+
+export function renameCategory(slug: string, name: string): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/categories/${slug}`, { name })
+}
+
+export function deleteCategory(slug: string): Promise<AdminWrite> {
+  return adminWrite('DELETE', `/api/admin/categories/${slug}`)
 }

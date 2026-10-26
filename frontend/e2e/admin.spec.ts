@@ -75,3 +75,75 @@ test('editing an entry sends the form and says it saved', async ({ page }) => {
   await expect(page.getByRole('status')).toHaveText('Guardado.')
   expect(saved).toMatchObject({ title: 'Certificado de notas', cost: '60 bolivianos (Bs)' })
 })
+
+// Categories come from a fake too, so a test can have an empty one (the demo has none).
+const CATEGORIES = [
+  {
+    name: 'Titulación',
+    slug: 'titulacion',
+    entries: [{ title: 'Diploma', slug: 'diploma', summary: '.' }],
+  },
+  { name: 'Deportes', slug: 'deportes', entries: [] },
+]
+
+async function fakeCategories(page: Page) {
+  const requests: { method: string; url: string; body: unknown }[] = []
+  await page.route('**/api/categories', (route) => route.fulfill({ json: CATEGORIES }))
+  await page.route('**/api/admin/categories**', (route) => {
+    const request = route.request()
+    const body = request.postDataJSON()
+    requests.push({ method: request.method(), url: new URL(request.url()).pathname, body })
+    if (body?.name === 'Titulación') {
+      return route.fulfill({ status: 409, json: { detail: 'Taken' } })
+    }
+    return route.fulfill({ status: request.method() === 'POST' ? 201 : 204 })
+  })
+  return requests
+}
+
+test('a new category is sent, and a taken name is explained', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  const requests = await fakeCategories(page)
+  await page.goto('/admin')
+  const name = page.getByLabel('Nombre de la nueva categoría')
+
+  await name.fill('Becas')
+  await page.getByRole('button', { name: 'Agregar' }).click()
+  await expect(name).toHaveValue('')
+  expect(requests).toEqual([
+    { method: 'POST', url: '/api/admin/categories', body: { name: 'Becas' } },
+  ])
+
+  await name.fill('Titulación')
+  await page.getByRole('button', { name: 'Agregar' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Ya existe una categoría con ese nombre.')
+  await expect(name).toHaveValue('Titulación')
+})
+
+test('a category can be renamed', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  const requests = await fakeCategories(page)
+  await page.goto('/admin')
+
+  await page.getByRole('button', { name: 'Renombrar' }).first().click()
+  await page.getByLabel('Nombre de la categoría').fill('Títulos')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+
+  await expect.poll(() => requests).toEqual([
+    { method: 'PUT', url: '/api/admin/categories/titulacion', body: { name: 'Títulos' } },
+  ])
+})
+
+test('only an empty category offers to be deleted', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  const requests = await fakeCategories(page)
+  await page.goto('/admin')
+
+  await expect(page.getByRole('button', { name: 'Eliminar' })).toHaveCount(1)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'Eliminar' }).click()
+
+  await expect.poll(() => requests).toEqual([
+    { method: 'DELETE', url: '/api/admin/categories/deportes', body: null },
+  ])
+})

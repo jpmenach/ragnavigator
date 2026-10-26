@@ -1,6 +1,14 @@
 import { redirect } from 'react-router'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
-import { getCurrentAdmin, logIn, logOut, updateEntryText } from './api'
+import {
+  createCategory,
+  deleteCategory,
+  getCurrentAdmin,
+  logIn,
+  logOut,
+  renameCategory,
+  updateEntryText,
+} from './api'
 
 // Loaders and actions for the admin pages. Kept out of the page files so Vite's fast
 // refresh can still swap those components in place while editing them.
@@ -40,15 +48,46 @@ export async function logoutAction() {
 export async function saveEntryAction({ params, request }: ActionFunctionArgs) {
   const form = await request.formData()
   const field = (name: string) => String(form.get(name))
-  const saved = await updateEntryText(params.slug!, {
+  const result = await updateEntryText(params.slug!, {
     title: field('title'),
     summary: field('summary'),
     cost: field('cost'),
     duration: field('duration'),
     notes: field('notes'),
   })
-  if (!saved) {
+  if (result === 'logged-out') {
     return redirect('/admin/login')
   }
-  return { saved: true }
+  return { saved: result === 'done' }
+}
+
+// The entry list's category forms: new, rename, delete. One action for the page, told
+// apart by the submit button's `intent`.
+export async function categoriesAction({ request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const intent = form.get('intent')
+  const slug = String(form.get('slug'))
+  const name = String(form.get('name'))
+  const result =
+    intent === 'create'
+      ? await createCategory(name)
+      : intent === 'rename'
+        ? await renameCategory(slug, name)
+        : await deleteCategory(slug)
+
+  if (result === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  if (result === 'conflict') {
+    return {
+      error:
+        intent === 'delete'
+          ? 'Esta categoría todavía tiene trámites.'
+          : 'Ya existe una categoría con ese nombre.',
+    }
+  }
+  if (result === 'invalid') {
+    return { error: 'El nombre necesita al menos una letra o un número.' }
+  }
+  return { error: null }
 }
