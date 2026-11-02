@@ -149,6 +149,17 @@ class RequirementIn(BaseModel):
     description: str | None = Field(default=None, max_length=1000)
 
 
+class EntryLocationIn(BaseModel):
+    """One of an entry's places: which one (by slug) and what's done there."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    location: str
+    # A noun like the catalog's ("Solicitud", "Pago", "Entrega"). Free text: entries need
+    # roles nobody planned for ("Devolución del dinero").
+    role: str = Field(min_length=1, max_length=100)
+
+
 class CategoryIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 

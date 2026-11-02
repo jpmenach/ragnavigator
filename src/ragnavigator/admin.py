@@ -22,12 +22,21 @@ from ragnavigator.auth import (
 )
 from ragnavigator.db import SessionDep
 from ragnavigator.indexing import reindex_entry, remove_entry
-from ragnavigator.models import AdminSession, AdminUser, Category, Entry, Requirement
+from ragnavigator.models import (
+    AdminSession,
+    AdminUser,
+    Category,
+    Entry,
+    EntryLocation,
+    Location,
+    Requirement,
+)
 from ragnavigator.schemas import (
     AdminOut,
     CategoryIn,
     CategoryOut,
     EntryIn,
+    EntryLocationIn,
     EntrySummaryOut,
     LoginIn,
     RequirementIn,
@@ -170,6 +179,40 @@ def replace_requirements(
     session.commit()
     # An entry without requirements loses its requirements document too.
     reindex_entry(live_index(), entry)
+
+
+@router.put("/entries/{slug}/locations", status_code=204)
+def replace_locations(
+    slug: str,
+    body: Annotated[list[EntryLocationIn], Body(max_length=20)],
+    session: SessionDep,
+    admin: CurrentAdmin,
+) -> None:
+    """The entry's places, as the whole list in step order, like its requirements. Places
+    themselves are only picked here, by slug: they're shared with other entries."""
+    entry = _get_entry(session, slug)
+    pairs = [(item.location, item.role) for item in body]
+    # The pair is the link's key: the same place twice is fine, with the same role it isn't.
+    if len(set(pairs)) != len(pairs):
+        raise HTTPException(status_code=422, detail="The same place and role appear twice")
+    slugs = {location for location, _ in pairs}
+    locations = {
+        location.slug: location
+        for location in session.scalars(select(Location).where(Location.slug.in_(slugs)))
+    }
+    if len(locations) != len(slugs):
+        raise HTTPException(status_code=422, detail="Unknown place")
+
+    # Read before replacing: a place taken off the entry still names it in the index.
+    former_places = [link.location for link in entry.locations]
+    # A link kept as it was has the same key as the old row: SQLAlchemy turns that delete
+    # plus insert into an update ("row switch"), so replacing the whole list is safe.
+    entry.locations = [
+        EntryLocation(location=locations[location], role=role, position=position)
+        for position, (location, role) in enumerate(pairs)
+    ]
+    session.commit()
+    reindex_entry(live_index(), entry, former_places)
 
 
 def _get_entry(session: Session, slug: str) -> Entry:

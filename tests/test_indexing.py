@@ -73,3 +73,15 @@ def test_removing_an_entry_deletes_its_sections_and_rebuilds_its_places(
         "entry/certificado-de-notas/notes",
     ]
     assert index_calls["replaced"] == ["location/secretaria/location"]
+
+
+def test_places_the_entry_was_unlinked_from_are_rebuilt_too(entry, db, index_calls):
+    former = Location(name="Caja central", slug="caja-central")
+    db.add(former)
+    db.commit()
+
+    indexing.reindex_entry(None, entry, former_places=[former])
+
+    # Its document still named the entry; rebuilt, it no longer does.
+    assert "location/caja-central/location" in index_calls["replaced"]
+    assert "location/secretaria/location" in index_calls["replaced"]

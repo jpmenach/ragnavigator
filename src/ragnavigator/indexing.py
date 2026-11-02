@@ -10,6 +10,8 @@ Run from the repo root (after seeding) with:
     uv run python -m ragnavigator.indexing
 """
 
+from collections.abc import Iterable
+
 from llama_index.core import Document, VectorStoreIndex
 from ragstarter.core.ingest import (
     build_index_from_documents,
@@ -129,15 +131,20 @@ def build_catalog_index() -> int:
     return len(documents)
 
 
-def reindex_entry(index: VectorStoreIndex, entry: Entry) -> None:
+def reindex_entry(
+    index: VectorStoreIndex, entry: Entry, former_places: Iterable[Location] = ()
+) -> None:
     """Bring a live index up to date with an edited entry, without rebuilding the rest.
 
     The entry's places are included: their documents name the entry, so a new title has to
-    reach them too.
+    reach them too. So are `former_places`, the ones it was just unlinked from: their
+    documents still name it until they're rebuilt.
     """
     documents = entry_documents(entry)
-    # A place can appear twice for one entry (request and pick up at the same counter).
-    places = {link.location.slug: link.location for link in entry.locations}
+    # A place can appear twice for one entry (request and pick up at the same counter),
+    # and a former place may still be linked under another role.
+    places = {location.slug: location for location in former_places}
+    places |= {link.location.slug: link.location for link in entry.locations}
     documents += [location_document(location) for location in places.values()]
 
     current = {document.doc_id for document in documents}

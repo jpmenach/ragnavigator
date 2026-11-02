@@ -37,7 +37,11 @@ def reindexed(monkeypatch) -> list[str]:
     entries were re-indexed instead, so they never load the embedding model."""
     slugs: list[str] = []
     monkeypatch.setattr(admin_api, "live_index", lambda: None)
-    monkeypatch.setattr(admin_api, "reindex_entry", lambda _index, entry: slugs.append(entry.slug))
+    monkeypatch.setattr(
+        admin_api,
+        "reindex_entry",
+        lambda _index, entry, former_places=(): slugs.append(entry.slug),
+    )
     return slugs
 
 
