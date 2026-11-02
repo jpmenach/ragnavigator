@@ -8,9 +8,11 @@ import {
   getCategories,
   getCurrentAdmin,
   getEntry,
+  getLocations,
   logIn,
   logOut,
   renameCategory,
+  replaceLocations,
   replaceRequirements,
   updateEntry,
 } from './api'
@@ -51,13 +53,15 @@ export async function logoutAction() {
   return redirect('/admin/login')
 }
 
-// The entry and the categories it can be moved to, fetched together.
+// The entry, the categories it can be moved to and the places it can be linked to,
+// fetched together.
 export async function entryLoader({ params, request }: LoaderFunctionArgs) {
-  const [entry, categories] = await Promise.all([
+  const [entry, categories, locations] = await Promise.all([
     getEntry(params.slug!, request.signal),
     getCategories(request.signal),
+    getLocations(request.signal),
   ])
-  return { entry, categories }
+  return { entry, categories, locations }
 }
 
 // "Nuevo trámite" is offered under each category, which comes preselected (?category=).
@@ -107,6 +111,21 @@ export async function requirementsAction({ params, request }: ActionFunctionArgs
     description: String(descriptions[i]),
   }))
   const outcome = await replaceRequirements(params.slug!, requirements)
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  return { saved: outcome === 'done' }
+}
+
+// The places editor's rows: a `location` select and a `role` input each, in screen order.
+export async function locationsAction({ params, request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const roles = form.getAll('role')
+  const places = form.getAll('location').map((location, i) => ({
+    location: String(location),
+    role: String(roles[i]),
+  }))
+  const outcome = await replaceLocations(params.slug!, places)
   if (outcome === 'logged-out') {
     return redirect('/admin/login')
   }

@@ -8,6 +8,7 @@ import {
   entryAction,
   entryLoader,
   loginAction,
+  locationsAction,
   loginLoader,
   logoutAction,
   newEntryAction,
@@ -96,8 +97,9 @@ const router = createBrowserRouter([
         Component: () => <EntryFormPage {...useLoaderData<typeof entryLoader>()} />,
         ErrorBoundary: EntryError,
       },
-      // No page: only the requirements editor's fetcher posts here.
+      // No page: only the list editors' fetchers post here.
       { path: 'entries/:slug/requirements', action: requirementsAction },
+      { path: 'entries/:slug/locations', action: locationsAction },
     ],
   },
   {

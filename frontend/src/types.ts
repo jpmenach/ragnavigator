@@ -90,3 +90,9 @@ export type Admin = {
 export type EntryFields = Pick<Entry, 'title' | 'summary' | 'cost' | 'duration' | 'notes'> & {
   category: string
 }
+
+// One of an entry's places as the admin saves it (EntryLocationIn): the place by slug.
+export type EntryPlace = {
+  location: string
+  role: string
+}

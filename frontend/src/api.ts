@@ -5,6 +5,7 @@ import type {
   CategoryWithEntries,
   Entry,
   EntryFields,
+  EntryPlace,
   EntrySummary,
   LocationWithEntries,
   Organization,
@@ -152,6 +153,11 @@ export function replaceRequirements(
   requirements: Requirement[],
 ): Promise<AdminWrite> {
   return adminWrite('PUT', `/api/admin/entries/${slug}/requirements`, requirements)
+}
+
+// Also the whole list, in step order. Places are picked by slug, not created here.
+export function replaceLocations(slug: string, places: EntryPlace[]): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/entries/${slug}/locations`, places)
 }
 
 export function deleteEntry(slug: string): Promise<AdminWrite> {

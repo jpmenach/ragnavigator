@@ -1,11 +1,20 @@
 import { Form, Link, useActionData, useNavigation } from 'react-router'
 import type { entryAction } from '../../adminRoutes'
-import type { Category, Entry } from '../../types'
+import type { Category, Entry, LocationWithEntries } from '../../types'
 import { EntryInputs } from './EntryInputs'
+import { PlacesEditor } from './PlacesEditor'
 import { RequirementsEditor } from './RequirementsEditor'
 
-// The entry's own fields, then its requirements, each saved on its own. Places come later.
-export function EntryFormPage({ entry, categories }: { entry: Entry; categories: Category[] }) {
+// The entry's own fields, then its requirements, then its places, each saved on its own.
+export function EntryFormPage({
+  entry,
+  categories,
+  locations,
+}: {
+  entry: Entry
+  categories: Category[]
+  locations: LocationWithEntries[]
+}) {
   const result = useActionData<typeof entryAction>()
   const navigation = useNavigation()
   const saving = navigation.state !== 'idle' && navigation.formData?.get('intent') !== 'delete'
@@ -42,8 +51,14 @@ export function EntryFormPage({ entry, categories }: { entry: Entry; categories:
         </div>
       </Form>
 
-      {/* Keyed like the form above: another entry starts with its own list. */}
+      {/* Keyed like the form above: another entry starts with its own lists. */}
       <RequirementsEditor key={entry.slug} slug={entry.slug} requirements={entry.requirements} />
+      <PlacesEditor
+        key={entry.slug}
+        slug={entry.slug}
+        links={entry.locations}
+        locations={locations}
+      />
 
       {/* A separate form, away from "Guardar": deleting can't be undone. */}
       <Form

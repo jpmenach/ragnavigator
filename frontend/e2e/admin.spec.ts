@@ -238,3 +238,32 @@ test('requirements are reordered, edited, removed and added, then saved as one l
     { name: 'Matrícula del semestre', description: '' },
   ])
 })
+
+test('places are picked from the existing ones, with a role, and saved in order', async ({
+  page,
+}) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let saved: unknown
+  await page.route('**/api/admin/entries/certificado-de-notas/locations', (route) => {
+    saved = route.request().postDataJSON()
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin/entries/certificado-de-notas')
+  // The demo's three: request at the platform, pay at the cashier, pick up at the platform.
+  await expect(page.getByLabel(/^Lugar \d$/)).toHaveCount(3)
+
+  await page.getByRole('button', { name: 'Subir el lugar 2' }).click()
+  await page.getByLabel('Lugar 3', { exact: true }).selectOption('Registros académicos')
+  await page.getByRole('button', { name: '+ Agregar lugar' }).click()
+  await page.getByLabel('Lugar 4', { exact: true }).selectOption('Secretaría general')
+  await page.getByLabel('Qué se hace en el lugar 4').fill('Legalización')
+  await page.getByRole('button', { name: 'Guardar lugares' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Lugares guardados.')
+  expect(saved).toEqual([
+    { location: 'caja-central', role: 'Pago' },
+    { location: 'plataforma-de-atencion', role: 'Solicitud' },
+    { location: 'registros-academicos', role: 'Entrega' },
+    { location: 'secretaria-general', role: 'Legalización' },
+  ])
+})
