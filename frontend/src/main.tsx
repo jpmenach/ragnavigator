@@ -16,6 +16,7 @@ import {
   newEntryAction,
   newEntryLoader,
   newLocationAction,
+  organizationAction,
   requirementsAction,
 } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
@@ -29,6 +30,7 @@ import { EntryFormPage } from './pages/admin/EntryFormPage.tsx'
 import { LocationError, LocationFormPage } from './pages/admin/LocationFormPage.tsx'
 import { NewEntryPage } from './pages/admin/NewEntryPage.tsx'
 import { NewLocationPage } from './pages/admin/NewLocationPage.tsx'
+import { OrganizationPage } from './pages/admin/OrganizationPage.tsx'
 import { LoginPage } from './pages/admin/LoginPage.tsx'
 import type {
   Admin,
@@ -126,6 +128,13 @@ const router = createBrowserRouter([
         action: locationAction,
         Component: () => <LocationFormPage location={useLoaderData<typeof locationLoader>()} />,
         ErrorBoundary: LocationError,
+      },
+      {
+        path: 'organization',
+        loader: ({ request }) => getOrganization(request.signal),
+        action: organizationAction,
+        Component: () => <OrganizationPage organization={useLoaderData<Organization>()} />,
+        ErrorBoundary: AdminError,
       },
     ],
   },

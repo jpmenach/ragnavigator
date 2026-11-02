@@ -350,3 +350,32 @@ test('an unknown place says so', async ({ page }) => {
   await page.goto('/admin/locations/no-existe')
   await expect(page.getByText('No encontramos este lugar.')).toBeVisible()
 })
+
+test('the organization form previews the color with readable text, then saves', async ({
+  page,
+}) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let saved: unknown
+  await page.route('**/api/admin/organization', (route) => {
+    saved = route.request().postDataJSON()
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin')
+  await page.getByRole('link', { name: 'Organización' }).click()
+  // Wait for the page: until it's there, a "Nombre" label is still the entry list's
+  // "Nombre de la nueva categoría", and fill() would type into that one.
+  await expect(page.getByRole('heading', { name: 'Organización' })).toBeVisible()
+  const preview = page.getByTestId('preview')
+
+  await page.getByLabel('Nombre', { exact: true }).fill('Universidad Andina')
+  await expect(preview).toHaveText('Universidad Andina')
+  // A light color gets black text, a dark one white, as on the site.
+  await page.getByLabel('Color principal').fill('#f5d90a')
+  await expect(preview).toHaveCSS('color', 'rgb(0, 0, 0)')
+  await page.getByLabel('Color principal').fill('#a31f34')
+  await expect(preview).toHaveCSS('color', 'rgb(255, 255, 255)')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Guardado.')
+  expect(saved).toEqual({ name: 'Universidad Andina', primary_color: '#a31f34' })
+})

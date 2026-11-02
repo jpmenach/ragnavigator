@@ -18,6 +18,7 @@ import {
   replaceRequirements,
   updateEntry,
   updateLocation,
+  updateOrganization,
 } from './api'
 import type { EntryFields, LocationFields } from './types'
 
@@ -199,6 +200,18 @@ function locationFields(form: FormData): LocationFields {
     directions: field('directions'),
     hours: field('hours'),
   }
+}
+
+export async function organizationAction({ request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const outcome = await updateOrganization({
+    name: String(form.get('name')),
+    primary_color: String(form.get('primary_color')),
+  })
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  return { saved: outcome === 'done' }
 }
 
 // The entry list's category forms: new, rename, delete. One action for the page, told

@@ -22,6 +22,9 @@ export function AdminLayout({ admin }: { admin: Admin }) {
               <NavLink to="/admin/locations" className={navLinkClass}>
                 Lugares
               </NavLink>
+              <NavLink to="/admin/organization" className={navLinkClass}>
+                Organización
+              </NavLink>
             </nav>
           </div>
           <div className="flex items-baseline gap-4 text-sm">

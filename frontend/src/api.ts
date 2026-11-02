@@ -177,6 +177,10 @@ export function deleteLocation(slug: string): Promise<AdminWrite> {
   return adminWrite('DELETE', `/api/admin/locations/${slug}`)
 }
 
+export function updateOrganization(organization: Organization): Promise<AdminWrite> {
+  return adminWrite('PUT', '/api/admin/organization', organization)
+}
+
 export function createCategory(name: string): Promise<AdminWrite> {
   return adminWrite('POST', '/api/admin/categories', { name })
 }
