@@ -29,6 +29,7 @@ from ragnavigator.models import (
     Entry,
     EntryLocation,
     Location,
+    Organization,
     Requirement,
 )
 from ragnavigator.schemas import (
@@ -41,6 +42,7 @@ from ragnavigator.schemas import (
     LocationOut,
     EntrySummaryOut,
     LoginIn,
+    OrganizationIn,
     RequirementIn,
 )
 from ragnavigator.slugs import slugify
@@ -284,6 +286,19 @@ def _set_location_fields(location: Location, body: LocationIn) -> None:
     for field, value in body.model_dump().items():
         # Blank optional fields mean "not set", as for entries.
         setattr(location, field, value or None)
+
+
+@router.put("/organization", status_code=204)
+def update_organization(body: OrganizationIn, session: SessionDep, admin: CurrentAdmin) -> None:
+    """Name and color. Nothing to re-index: neither is in the index; the site reads them on
+    its next load."""
+    # The same single row GET /api/organization reads.
+    organization = session.scalar(select(Organization).order_by(Organization.id).limit(1))
+    if organization is None:
+        raise HTTPException(status_code=404, detail="Organization not configured")
+    organization.name = body.name
+    organization.primary_color = body.primary_color
+    session.commit()
 
 
 @router.post("/categories", status_code=201)

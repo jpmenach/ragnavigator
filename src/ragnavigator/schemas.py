@@ -5,6 +5,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ragnavigator.models import HEX_COLOR
+
 
 class Schema(BaseModel):
     # Lets every schema be built straight from a SQLAlchemy object.
@@ -171,6 +173,16 @@ class LocationIn(BaseModel):
     floor: str | None = Field(default=None, max_length=100)
     directions: str | None = Field(default=None, max_length=2000)
     hours: str | None = Field(default=None, max_length=500)
+
+
+class OrganizationIn(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=200)
+    # The model checks this too (it ends up in the page's CSS); checking it here as well
+    # turns a bad color into a 422 instead of the model's ValueError, a 500. Anchored:
+    # Pydantic's pattern searches, it doesn't have to match the whole string like the model.
+    primary_color: str = Field(pattern=f"^{HEX_COLOR.pattern}$")
 
 
 class CategoryIn(BaseModel):
