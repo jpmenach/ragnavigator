@@ -70,7 +70,8 @@ test('editing an entry sends the form and says it saved', async ({ page }) => {
 
   await expect(page.getByLabel('Título')).toHaveValue('Certificado de notas')
   await page.getByLabel('Costo').fill('60 bolivianos (Bs)')
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  // Exact: the requirements below have their own "Guardar requisitos".
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
   await expect(page.getByRole('status')).toHaveText('Guardado.')
   expect(saved).toMatchObject({ title: 'Certificado de notas', cost: '60 bolivianos (Bs)' })
@@ -208,4 +209,32 @@ test('deleting an entry asks first, then goes back to the list', async ({ page }
   await page.getByRole('button', { name: 'Eliminar trámite' }).click()
   await expect(page).toHaveURL(/\/admin$/)
   expect(deleted).toBe(true)
+})
+
+test('requirements are reordered, edited, removed and added, then saved as one list', async ({
+  page,
+}) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let saved: unknown
+  await page.route('**/api/admin/entries/certificado-de-notas/requirements', (route) => {
+    saved = route.request().postDataJSON()
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin/entries/certificado-de-notas')
+  // The demo's three: carnet, comprobante de pago, formulario.
+  await expect(page.getByLabel(/^Requisito \d$/)).toHaveCount(3)
+
+  await page.getByRole('button', { name: 'Subir el requisito 2' }).click()
+  await page.getByLabel('Requisito 2', { exact: true }).fill('Fotocopia de carnet vigente')
+  await page.getByRole('button', { name: 'Quitar el requisito 3' }).click()
+  await page.getByRole('button', { name: '+ Agregar requisito' }).click()
+  await page.getByLabel('Requisito 3', { exact: true }).fill('Matrícula del semestre')
+  await page.getByRole('button', { name: 'Guardar requisitos' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Requisitos guardados.')
+  expect(saved).toEqual([
+    { name: 'Comprobante de pago del trámite', description: 'Se obtiene en caja central.' },
+    { name: 'Fotocopia de carnet vigente', description: '' },
+    { name: 'Matrícula del semestre', description: '' },
+  ])
 })

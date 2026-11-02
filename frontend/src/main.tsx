@@ -12,6 +12,7 @@ import {
   logoutAction,
   newEntryAction,
   newEntryLoader,
+  requirementsAction,
 } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
@@ -95,6 +96,8 @@ const router = createBrowserRouter([
         Component: () => <EntryFormPage {...useLoaderData<typeof entryLoader>()} />,
         ErrorBoundary: EntryError,
       },
+      // No page: only the requirements editor's fetcher posts here.
+      { path: 'entries/:slug/requirements', action: requirementsAction },
     ],
   },
   {

@@ -8,6 +8,7 @@ import type {
   EntrySummary,
   LocationWithEntries,
   Organization,
+  Requirement,
 } from './types'
 
 export async function getEntry(slug: string, signal: AbortSignal): Promise<Entry> {
@@ -143,6 +144,14 @@ export async function createEntry(
 
 export function updateEntry(slug: string, fields: EntryFields): Promise<AdminWrite> {
   return adminWrite('PUT', `/api/admin/entries/${slug}`, fields)
+}
+
+// The whole list, in order: the server replaces what the entry had.
+export function replaceRequirements(
+  slug: string,
+  requirements: Requirement[],
+): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/entries/${slug}/requirements`, requirements)
 }
 
 export function deleteEntry(slug: string): Promise<AdminWrite> {

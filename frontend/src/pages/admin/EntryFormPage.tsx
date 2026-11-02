@@ -2,8 +2,9 @@ import { Form, Link, useActionData, useNavigation } from 'react-router'
 import type { entryAction } from '../../adminRoutes'
 import type { Category, Entry } from '../../types'
 import { EntryInputs } from './EntryInputs'
+import { RequirementsEditor } from './RequirementsEditor'
 
-// The entry's own fields. Requirements and places are lists with their own editing, later.
+// The entry's own fields, then its requirements, each saved on its own. Places come later.
 export function EntryFormPage({ entry, categories }: { entry: Entry; categories: Category[] }) {
   const result = useActionData<typeof entryAction>()
   const navigation = useNavigation()
@@ -40,6 +41,9 @@ export function EntryFormPage({ entry, categories }: { entry: Entry; categories:
           )}
         </div>
       </Form>
+
+      {/* Keyed like the form above: another entry starts with its own list. */}
+      <RequirementsEditor key={entry.slug} slug={entry.slug} requirements={entry.requirements} />
 
       {/* A separate form, away from "Guardar": deleting can't be undone. */}
       <Form

@@ -11,6 +11,7 @@ import {
   logIn,
   logOut,
   renameCategory,
+  replaceRequirements,
   updateEntry,
 } from './api'
 import type { EntryFields } from './types'
@@ -89,6 +90,23 @@ export async function entryAction({ params, request }: ActionFunctionArgs) {
     return redirect(outcome === 'logged-out' ? '/admin/login' : '/admin')
   }
   const outcome = await updateEntry(params.slug!, entryFields(form))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  return { saved: outcome === 'done' }
+}
+
+// The requirements editor posts here (its own route, so its result doesn't mix with the
+// entry form's). Each row has a `name` and a `description` input; getAll() returns them in
+// the order they're on screen, which is the list's order.
+export async function requirementsAction({ params, request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const descriptions = form.getAll('description')
+  const requirements = form.getAll('name').map((name, i) => ({
+    name: String(name),
+    description: String(descriptions[i]),
+  }))
+  const outcome = await replaceRequirements(params.slug!, requirements)
   if (outcome === 'logged-out') {
     return redirect('/admin/login')
   }
