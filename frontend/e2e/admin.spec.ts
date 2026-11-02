@@ -267,3 +267,86 @@ test('places are picked from the existing ones, with a role, and saved in order'
     { location: 'secretaria-general', role: 'Legalización' },
   ])
 })
+
+test('a place is edited from the list of places, and a place in use is not deletable', async ({
+  page,
+}) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let saved: unknown
+  await page.route('**/api/admin/locations/caja-central', (route) => {
+    saved = route.request().postDataJSON()
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin')
+  await page.getByRole('link', { name: 'Lugares' }).click()
+
+  await expect(page).toHaveURL(/\/admin\/locations$/)
+  await expect(page.getByRole('link', { name: /Caja central/ })).toContainText('7 trámites')
+  await page.getByRole('link', { name: /Caja central/ }).click()
+
+  await expect(page.getByLabel('Piso')).toHaveValue('Planta baja')
+  await expect(page.getByRole('button', { name: 'Eliminar lugar' })).toHaveCount(0)
+  await page.getByLabel('Horario').fill('Lunes a viernes de 8:00 a 15:00.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Guardado.')
+  expect(saved).toMatchObject({ name: 'Caja central', hours: 'Lunes a viernes de 8:00 a 15:00.' })
+})
+
+test('a new place is created, and a taken name is explained', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let created: unknown
+  await page.route('**/api/admin/locations', (route) => {
+    const body = route.request().postDataJSON()
+    created = body
+    return body.name === 'Caja central'
+      ? route.fulfill({ status: 409, json: { detail: 'Taken' } })
+      : route.fulfill({ status: 201, json: { ...body, slug: 'biblioteca' } })
+  })
+  await page.goto('/admin/locations')
+  await page.getByRole('link', { name: '+ Nuevo lugar' }).click()
+
+  await page.getByLabel('Nombre').fill('Caja central')
+  await page.getByRole('button', { name: 'Crear lugar' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Ya existe un lugar con ese nombre.')
+
+  await page.getByLabel('Nombre').fill('Biblioteca')
+  await page.getByLabel('Edificio').fill('Edificio C')
+  await page.getByRole('button', { name: 'Crear lugar' }).click()
+  await expect(page).toHaveURL(/\/admin\/locations$/)
+  expect(created).toMatchObject({ name: 'Biblioteca', building: 'Edificio C', floor: '' })
+})
+
+test('an unused place can be deleted, after asking', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  // Every demo place is in use, so the list comes from a fake with an unused one.
+  const biblioteca = {
+    name: 'Biblioteca',
+    slug: 'biblioteca',
+    building: null,
+    floor: null,
+    directions: null,
+    hours: null,
+    entries: [],
+  }
+  await page.route('**/api/locations', (route) => route.fulfill({ json: [biblioteca] }))
+  let deleted = false
+  await page.route('**/api/admin/locations/biblioteca', (route) => {
+    deleted = route.request().method() === 'DELETE'
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin/locations/biblioteca')
+
+  await expect(page.getByText('Ninguno todavía.')).toBeVisible()
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'Eliminar lugar' }).click()
+
+  await expect(page).toHaveURL(/\/admin\/locations$/)
+  expect(deleted).toBe(true)
+})
+
+test('an unknown place says so', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  await page.goto('/admin/locations/no-existe')
+  await expect(page.getByText('No encontramos este lugar.')).toBeVisible()
+})

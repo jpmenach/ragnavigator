@@ -96,3 +96,6 @@ export type EntryPlace = {
   location: string
   role: string
 }
+
+// What the admin's place form saves (LocationIn in schemas.py).
+export type LocationFields = Omit<Location, 'slug'>

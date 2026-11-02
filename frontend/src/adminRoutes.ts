@@ -1,10 +1,12 @@
-import { redirect } from 'react-router'
+import { data, redirect } from 'react-router'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
 import {
   createCategory,
   createEntry,
+  createLocation,
   deleteCategory,
   deleteEntry,
+  deleteLocation,
   getCategories,
   getCurrentAdmin,
   getEntry,
@@ -15,8 +17,9 @@ import {
   replaceLocations,
   replaceRequirements,
   updateEntry,
+  updateLocation,
 } from './api'
-import type { EntryFields } from './types'
+import type { EntryFields, LocationFields } from './types'
 
 // Loaders and actions for the admin pages. Kept out of the page files so Vite's fast
 // refresh can still swap those components in place while editing them.
@@ -141,6 +144,60 @@ function entryFields(form: FormData): EntryFields {
     cost: field('cost'),
     duration: field('duration'),
     notes: field('notes'),
+  }
+}
+
+// There's no endpoint for one place: the list is short, so the page picks it from there.
+export async function locationLoader({ params, request }: LoaderFunctionArgs) {
+  const locations = await getLocations(request.signal)
+  const location = locations.find((location) => location.slug === params.slug)
+  if (location === undefined) {
+    throw data('Place not found', { status: 404 })
+  }
+  return location
+}
+
+export async function newLocationAction({ request }: ActionFunctionArgs) {
+  const outcome = await createLocation(locationFields(await request.formData()))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  if (outcome === 'conflict') {
+    return { error: 'Ya existe un lugar con ese nombre.' }
+  }
+  if (outcome === 'invalid') {
+    return { error: 'No se pudo crear: revisa los campos.' }
+  }
+  // Back to the list: unlike an entry, a place has nothing left to add on its own page.
+  return redirect('/admin/locations')
+}
+
+// Like entryAction: the form saves, "Eliminar lugar" posts intent=delete.
+export async function locationAction({ params, request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  if (form.get('intent') === 'delete') {
+    const outcome = await deleteLocation(params.slug!)
+    if (outcome === 'conflict') {
+      // The page only offers it for unused places, but an entry may have just been linked.
+      return { saved: false, error: 'Algún trámite todavía usa este lugar.' }
+    }
+    return redirect(outcome === 'logged-out' ? '/admin/login' : '/admin/locations')
+  }
+  const outcome = await updateLocation(params.slug!, locationFields(form))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  return { saved: outcome === 'done', error: null }
+}
+
+function locationFields(form: FormData): LocationFields {
+  const field = (name: string) => String(form.get(name))
+  return {
+    name: field('name'),
+    building: field('building'),
+    floor: field('floor'),
+    directions: field('directions'),
+    hours: field('hours'),
   }
 }
 

@@ -1,14 +1,29 @@
-import { Form, Link, Outlet } from 'react-router'
+import { Form, Link, NavLink, Outlet } from 'react-router'
 import type { Admin } from '../../types'
+
+function navLinkClass({ isActive }: { isActive: boolean }) {
+  return isActive ? 'font-medium text-primary' : 'text-gray-600 hover:underline'
+}
 
 export function AdminLayout({ admin }: { admin: Admin }) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <header className="border-b border-gray-200">
         <div className="mx-auto flex max-w-6xl items-baseline justify-between gap-6 px-4 py-4">
-          <Link to="/admin" className="text-lg font-semibold">
-            Administración
-          </Link>
+          <div className="flex flex-wrap items-baseline gap-x-6">
+            <Link to="/admin" className="text-lg font-semibold">
+              Administración
+            </Link>
+            <nav className="flex gap-4 text-sm">
+              {/* `end`: /admin is a prefix of every admin URL, places included. */}
+              <NavLink to="/admin" end className={navLinkClass}>
+                Trámites
+              </NavLink>
+              <NavLink to="/admin/locations" className={navLinkClass}>
+                Lugares
+              </NavLink>
+            </nav>
+          </div>
           <div className="flex items-baseline gap-4 text-sm">
             <span className="text-gray-600">{admin.username}</span>
             <Form method="post" action="/admin/logout">

@@ -7,6 +7,7 @@ import type {
   EntryFields,
   EntryPlace,
   EntrySummary,
+  LocationFields,
   LocationWithEntries,
   Organization,
   Requirement,
@@ -162,6 +163,18 @@ export function replaceLocations(slug: string, places: EntryPlace[]): Promise<Ad
 
 export function deleteEntry(slug: string): Promise<AdminWrite> {
   return adminWrite('DELETE', `/api/admin/entries/${slug}`)
+}
+
+export function createLocation(fields: LocationFields): Promise<AdminWrite> {
+  return adminWrite('POST', '/api/admin/locations', fields)
+}
+
+export function updateLocation(slug: string, fields: LocationFields): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/locations/${slug}`, fields)
+}
+
+export function deleteLocation(slug: string): Promise<AdminWrite> {
+  return adminWrite('DELETE', `/api/admin/locations/${slug}`)
 }
 
 export function createCategory(name: string): Promise<AdminWrite> {

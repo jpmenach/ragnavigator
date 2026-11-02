@@ -7,12 +7,15 @@ import {
   categoriesAction,
   entryAction,
   entryLoader,
-  loginAction,
+  locationAction,
+  locationLoader,
   locationsAction,
+  loginAction,
   loginLoader,
   logoutAction,
   newEntryAction,
   newEntryLoader,
+  newLocationAction,
   requirementsAction,
 } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
@@ -21,8 +24,11 @@ import { HomeError, HomePage } from './pages/HomePage.tsx'
 import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
 import { AdminEntriesPage } from './pages/admin/AdminEntriesPage.tsx'
 import { AdminError, AdminLayout } from './pages/admin/AdminLayout.tsx'
+import { AdminLocationsPage } from './pages/admin/AdminLocationsPage.tsx'
 import { EntryFormPage } from './pages/admin/EntryFormPage.tsx'
+import { LocationError, LocationFormPage } from './pages/admin/LocationFormPage.tsx'
 import { NewEntryPage } from './pages/admin/NewEntryPage.tsx'
+import { NewLocationPage } from './pages/admin/NewLocationPage.tsx'
 import { LoginPage } from './pages/admin/LoginPage.tsx'
 import type {
   Admin,
@@ -100,6 +106,27 @@ const router = createBrowserRouter([
       // No page: only the list editors' fetchers post here.
       { path: 'entries/:slug/requirements', action: requirementsAction },
       { path: 'entries/:slug/locations', action: locationsAction },
+      {
+        path: 'locations',
+        loader: ({ request }) => getLocations(request.signal),
+        Component: () => (
+          <AdminLocationsPage locations={useLoaderData<LocationWithEntries[]>()} />
+        ),
+        ErrorBoundary: LocationsError,
+      },
+      {
+        path: 'locations/new',
+        action: newLocationAction,
+        Component: NewLocationPage,
+        ErrorBoundary: AdminError,
+      },
+      {
+        path: 'locations/:slug',
+        loader: locationLoader,
+        action: locationAction,
+        Component: () => <LocationFormPage location={useLoaderData<typeof locationLoader>()} />,
+        ErrorBoundary: LocationError,
+      },
     ],
   },
   {
