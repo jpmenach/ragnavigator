@@ -7,7 +7,7 @@ the token's hash, so logging out, or deleting the row, ends the session on the s
 
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Cookie, Depends, HTTPException, Response
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -22,7 +22,7 @@ from ragnavigator.auth import (
 )
 from ragnavigator.db import SessionDep
 from ragnavigator.indexing import reindex_entry, remove_entry
-from ragnavigator.models import AdminSession, AdminUser, Category, Entry
+from ragnavigator.models import AdminSession, AdminUser, Category, Entry, Requirement
 from ragnavigator.schemas import (
     AdminOut,
     CategoryIn,
@@ -30,6 +30,7 @@ from ragnavigator.schemas import (
     EntryIn,
     EntrySummaryOut,
     LoginIn,
+    RequirementIn,
 )
 from ragnavigator.slugs import slugify
 
@@ -148,6 +149,27 @@ def delete_entry(slug: str, session: SessionDep, admin: CurrentAdmin) -> None:
     session.delete(entry)
     session.commit()
     remove_entry(live_index(), slug, places)
+
+
+@router.put("/entries/{slug}/requirements", status_code=204)
+def replace_requirements(
+    slug: str,
+    body: Annotated[list[RequirementIn], Body(max_length=50)],
+    session: SessionDep,
+    admin: CurrentAdmin,
+) -> None:
+    """The whole list, as it should be now: adding, editing, removing and reordering are all
+    one save. Requirements have no identity of their own (nothing links to one), so the old
+    rows are simply replaced."""
+    entry = _get_entry(session, slug)
+    # The old rows are deleted on commit (delete-orphan); the list order becomes `position`.
+    entry.requirements = [
+        Requirement(name=item.name, description=item.description or None, position=position)
+        for position, item in enumerate(body)
+    ]
+    session.commit()
+    # An entry without requirements loses its requirements document too.
+    reindex_entry(live_index(), entry)
 
 
 def _get_entry(session: Session, slug: str) -> Entry:
