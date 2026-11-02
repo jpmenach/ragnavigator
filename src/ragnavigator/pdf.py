@@ -1,16 +1,20 @@
 """The requirements sheet for one entry, as a PDF people can print or carry on their phone.
 
-Uses fpdf2's built-in Helvetica, which covers Spanish (á, ñ, ¿) but only Latin-1: text with
-characters like "•" or "—" raises an error. The catalog content avoids them; once an admin can
-type anything (Phase 4), bundle a Unicode TTF font instead.
+Uses DejaVu Sans, bundled in fonts/ (license next to it). fpdf2's built-in Helvetica only
+covers Latin-1, so text an admin types with “curly quotes”, "—" or "•" raised an error
+and the PDF failed. fpdf2 embeds only the characters a sheet uses, so it stays small.
 """
 
 from datetime import date
+from pathlib import Path
 
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 from ragnavigator.models import Entry
+
+FONTS_DIR = Path(__file__).parent / "fonts"
+FONT = "dejavu"
 
 GRAY = (90, 90, 90)
 BLACK = (0, 0, 0)
@@ -18,6 +22,8 @@ BLACK = (0, 0, 0)
 
 def requirements_pdf(entry: Entry) -> bytes:
     pdf = FPDF(format="A4")
+    pdf.add_font(FONT, style="", fname=FONTS_DIR / "DejaVuSans.ttf")
+    pdf.add_font(FONT, style="B", fname=FONTS_DIR / "DejaVuSans-Bold.ttf")
     pdf.set_margins(20, 20)
     pdf.add_page()
 
@@ -72,7 +78,7 @@ def _text(
     color: tuple[int, int, int] = BLACK,
     indent: float = 0,
 ) -> None:
-    pdf.set_font("helvetica", style=style, size=size)
+    pdf.set_font(FONT, style=style, size=size)
     pdf.set_text_color(*color)
     pdf.set_x(pdf.l_margin + indent)
     # Width 0 runs to the right margin; the next line starts back at the left margin.
