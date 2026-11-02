@@ -21,7 +21,7 @@ from ragnavigator.auth import (
     verify_password,
 )
 from ragnavigator.db import SessionDep
-from ragnavigator.indexing import reindex_entry, remove_entry
+from ragnavigator.indexing import reindex_entry, reindex_location, remove_entry, remove_location
 from ragnavigator.models import (
     AdminSession,
     AdminUser,
@@ -37,6 +37,8 @@ from ragnavigator.schemas import (
     CategoryOut,
     EntryIn,
     EntryLocationIn,
+    LocationIn,
+    LocationOut,
     EntrySummaryOut,
     LoginIn,
     RequirementIn,
@@ -230,6 +232,58 @@ def _set_entry_fields(session: Session, entry: Entry, body: EntryIn) -> None:
     for field, value in body.model_dump(exclude={"category"}).items():
         # A blank optional field means "not set", the same as leaving it out of the catalog.
         setattr(entry, field, value or None)
+
+
+@router.post("/locations", status_code=201)
+def create_location(body: LocationIn, session: SessionDep, admin: CurrentAdmin) -> LocationOut:
+    # Like an entry's, the slug comes from the name once and stays.
+    slug = slugify(body.name)
+    if not slug:
+        raise HTTPException(status_code=422, detail="The name needs a letter or a number")
+    if session.scalar(select(Location.id).where(Location.slug == slug)) is not None:
+        raise HTTPException(status_code=409, detail="There's already a place with that name")
+    location = Location(slug=slug)
+    _set_location_fields(location, body)
+    session.add(location)
+    session.commit()
+    # Indexed right away: the assistant can answer where a place is before any entry uses it.
+    reindex_location(live_index(), location)
+    return LocationOut.model_validate(location)
+
+
+@router.put("/locations/{slug}", status_code=204)
+def update_location(
+    slug: str, body: LocationIn, session: SessionDep, admin: CurrentAdmin
+) -> None:
+    location = _get_location(session, slug)
+    _set_location_fields(location, body)
+    session.commit()
+    # Its document, and the "where and when" of every entry that sends people there.
+    reindex_location(live_index(), location)
+
+
+@router.delete("/locations/{slug}", status_code=204)
+def delete_location(slug: str, session: SessionDep, admin: CurrentAdmin) -> None:
+    location = _get_location(session, slug)
+    # Only when unused, like a category: entries would otherwise lose a step silently.
+    if location.entries:
+        raise HTTPException(status_code=409, detail="Some entries still use this place")
+    session.delete(location)
+    session.commit()
+    remove_location(live_index(), slug)
+
+
+def _get_location(session: Session, slug: str) -> Location:
+    location = session.scalar(select(Location).where(Location.slug == slug))
+    if location is None:
+        raise HTTPException(status_code=404, detail="Place not found")
+    return location
+
+
+def _set_location_fields(location: Location, body: LocationIn) -> None:
+    for field, value in body.model_dump().items():
+        # Blank optional fields mean "not set", as for entries.
+        setattr(location, field, value or None)
 
 
 @router.post("/categories", status_code=201)

@@ -160,6 +160,19 @@ class EntryLocationIn(BaseModel):
     role: str = Field(min_length=1, max_length=100)
 
 
+class LocationIn(BaseModel):
+    """A place's fields, as the admin form sends them. Like an entry's, the slug isn't
+    editable: it's the #anchor on the locations page the assistant takes people to."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=200)
+    building: str | None = Field(default=None, max_length=200)
+    floor: str | None = Field(default=None, max_length=100)
+    directions: str | None = Field(default=None, max_length=2000)
+    hours: str | None = Field(default=None, max_length=500)
+
+
 class CategoryIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 

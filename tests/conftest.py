@@ -55,6 +55,22 @@ def removed_from_index(monkeypatch) -> list[str]:
     return slugs
 
 
+@pytest.fixture(autouse=True)
+def location_index_calls(monkeypatch) -> dict[str, list[str]]:
+    """Like `reindexed` and `removed_from_index`, for places: which were re-indexed and
+    which removed."""
+    calls: dict[str, list[str]] = {"reindexed": [], "removed": []}
+    monkeypatch.setattr(
+        admin_api,
+        "reindex_location",
+        lambda _index, location: calls["reindexed"].append(location.slug),
+    )
+    monkeypatch.setattr(
+        admin_api, "remove_location", lambda _index, slug: calls["removed"].append(slug)
+    )
+    return calls
+
+
 @pytest.fixture
 def client(db) -> TestClient:
     # https, or the client would keep the Secure session cookie to itself.

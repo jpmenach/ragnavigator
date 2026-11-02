@@ -85,3 +85,23 @@ def test_places_the_entry_was_unlinked_from_are_rebuilt_too(entry, db, index_cal
     # Its document still named the entry; rebuilt, it no longer does.
     assert "location/caja-central/location" in index_calls["replaced"]
     assert "location/secretaria/location" in index_calls["replaced"]
+
+
+def test_reindexing_a_place_also_rebuilds_where_and_when_of_entries_using_it(
+    entry, index_calls
+):
+    secretaria = entry.locations[0].location
+
+    indexing.reindex_location(None, secretaria)
+
+    # The entry uses it twice but gets one document; its other sections don't mention it.
+    assert index_calls["replaced"] == [
+        "location/secretaria/location",
+        "entry/certificado-de-notas/where-and-when",
+    ]
+
+
+def test_removing_a_place_deletes_its_document(index_calls):
+    indexing.remove_location(None, "caja-central")
+
+    assert index_calls["deleted"] == ["location/caja-central/location"]

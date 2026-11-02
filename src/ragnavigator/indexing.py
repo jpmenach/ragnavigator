@@ -160,6 +160,27 @@ def remove_entry(index: VectorStoreIndex, slug: str, places: list[Location]) -> 
         replace_documents(index, [location_document(location) for location in places])
 
 
+def reindex_location(index: VectorStoreIndex, location: Location) -> None:
+    """Bring a live index up to date with an edited (or new) place: its own document, and
+    those of the entries that use it, whose "where and when" describes it too."""
+    documents = [location_document(location)]
+    # An entry can use the same place twice (request and pick up there).
+    entries = {link.entry.slug: link.entry for link in location.entries}
+    for entry in entries.values():
+        documents += [
+            document
+            for document in entry_documents(entry)
+            if document.metadata["section"] == "where-and-when"
+        ]
+    replace_documents(index, documents)
+
+
+def remove_location(index: VectorStoreIndex, slug: str) -> None:
+    """Take a deleted place out of a live index. Only unused places can be deleted, so no
+    entry's document mentions it."""
+    delete_documents(index, [_document_id("location", slug, "location")])
+
+
 def _describe_location(location: Location) -> str:
     parts = [location.name]
     place = ", ".join(part for part in (location.building, location.floor) if part)
