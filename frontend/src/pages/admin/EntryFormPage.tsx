@@ -1,14 +1,13 @@
 import { Form, Link, useActionData, useNavigation } from 'react-router'
-import type { saveEntryAction } from '../../adminRoutes'
-import type { Entry } from '../../types'
+import type { entryAction } from '../../adminRoutes'
+import type { Category, Entry } from '../../types'
+import { EntryInputs } from './EntryInputs'
 
-const INPUT =
-  'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none'
-
-// The entry's own text. Requirements and places are lists with their own editing, later.
-export function EntryFormPage({ entry }: { entry: Entry }) {
-  const result = useActionData<typeof saveEntryAction>()
-  const saving = useNavigation().state !== 'idle'
+// The entry's own fields. Requirements and places are lists with their own editing, later.
+export function EntryFormPage({ entry, categories }: { entry: Entry; categories: Category[] }) {
+  const result = useActionData<typeof entryAction>()
+  const navigation = useNavigation()
+  const saving = navigation.state !== 'idle' && navigation.formData?.get('intent') !== 'delete'
 
   return (
     <>
@@ -25,55 +24,7 @@ export function EntryFormPage({ entry }: { entry: Entry }) {
       {/* Keyed by slug: moving to another entry starts a fresh form, not one holding the
           previous entry's edits. */}
       <Form key={entry.slug} method="post" className="mt-6 max-w-2xl space-y-4">
-        {/* Stays where it is until the form gets a category picker. */}
-        <input type="hidden" name="category" value={entry.category.slug} />
-        <label className="block">
-          <span className="text-sm font-medium">Título</span>
-          <input
-            name="title"
-            defaultValue={entry.title}
-            required
-            maxLength={200}
-            className={INPUT}
-          />
-        </label>
-        <label className="block">
-          <span className="text-sm font-medium">Resumen</span>
-          <textarea
-            name="summary"
-            defaultValue={entry.summary}
-            required
-            maxLength={500}
-            rows={2}
-            className={INPUT}
-          />
-        </label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium">Costo</span>
-            <input name="cost" defaultValue={entry.cost ?? ''} maxLength={200} className={INPUT} />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">Duración</span>
-            <input
-              name="duration"
-              defaultValue={entry.duration ?? ''}
-              maxLength={200}
-              className={INPUT}
-            />
-          </label>
-        </div>
-        <label className="block">
-          <span className="text-sm font-medium">Observaciones</span>
-          <textarea
-            name="notes"
-            defaultValue={entry.notes ?? ''}
-            maxLength={5000}
-            rows={4}
-            className={INPUT}
-          />
-        </label>
-
+        <EntryInputs entry={entry} categories={categories} category={entry.category.slug} />
         <div className="flex items-center gap-4">
           <button
             type="submit"
@@ -88,6 +39,26 @@ export function EntryFormPage({ entry }: { entry: Entry }) {
             </p>
           )}
         </div>
+      </Form>
+
+      {/* A separate form, away from "Guardar": deleting can't be undone. */}
+      <Form
+        method="post"
+        onSubmit={(event) => {
+          if (!confirm(`¿Eliminar «${entry.title}»? Se borran también sus requisitos.`)) {
+            event.preventDefault()
+          }
+        }}
+        className="mt-12 max-w-2xl border-t border-gray-200 pt-6"
+      >
+        <button
+          type="submit"
+          name="intent"
+          value="delete"
+          className="text-sm text-red-700 hover:underline"
+        >
+          Eliminar trámite
+        </button>
       </Form>
     </>
   )

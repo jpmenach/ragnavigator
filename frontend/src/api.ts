@@ -5,6 +5,7 @@ import type {
   CategoryWithEntries,
   Entry,
   EntryFields,
+  EntrySummary,
   LocationWithEntries,
   Organization,
 } from './types'
@@ -101,28 +102,51 @@ export async function logOut(): Promise<void> {
 export type AdminWrite = 'done' | 'logged-out' | 'conflict' | 'invalid'
 
 async function adminWrite(method: string, path: string, body?: unknown): Promise<AdminWrite> {
+  const { outcome } = await adminFetch(method, path, body)
+  return outcome
+}
+
+// adminWrite, plus the response, for the writes whose body the page needs.
+async function adminFetch(
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<{ outcome: AdminWrite; response: Response }> {
   const response = await fetch(path, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (response.status === 401) {
-    return 'logged-out'
+    return { outcome: 'logged-out', response }
   }
   if (response.status === 409) {
-    return 'conflict'
+    return { outcome: 'conflict', response }
   }
   if (response.status === 422) {
-    return 'invalid'
+    return { outcome: 'invalid', response }
   }
   if (!response.ok) {
     throw new Error(`${method} ${path} failed with ${response.status}`)
   }
-  return 'done'
+  return { outcome: 'done', response }
+}
+
+// The new entry's slug comes from the server (made from the title), for the page to go to.
+export async function createEntry(
+  fields: EntryFields,
+): Promise<{ outcome: AdminWrite; slug: string | null }> {
+  const { outcome, response } = await adminFetch('POST', '/api/admin/entries', fields)
+  const slug = outcome === 'done' ? ((await response.json()) as EntrySummary).slug : null
+  return { outcome, slug }
 }
 
 export function updateEntry(slug: string, fields: EntryFields): Promise<AdminWrite> {
   return adminWrite('PUT', `/api/admin/entries/${slug}`, fields)
+}
+
+export function deleteEntry(slug: string): Promise<AdminWrite> {
+  return adminWrite('DELETE', `/api/admin/entries/${slug}`)
 }
 
 export function createCategory(name: string): Promise<AdminWrite> {

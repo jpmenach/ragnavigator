@@ -2,13 +2,18 @@ import { redirect } from 'react-router'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
 import {
   createCategory,
+  createEntry,
   deleteCategory,
+  deleteEntry,
+  getCategories,
   getCurrentAdmin,
+  getEntry,
   logIn,
   logOut,
   renameCategory,
   updateEntry,
 } from './api'
+import type { EntryFields } from './types'
 
 // Loaders and actions for the admin pages. Kept out of the page files so Vite's fast
 // refresh can still swap those components in place while editing them.
@@ -45,21 +50,61 @@ export async function logoutAction() {
   return redirect('/admin/login')
 }
 
-export async function saveEntryAction({ params, request }: ActionFunctionArgs) {
+// The entry and the categories it can be moved to, fetched together.
+export async function entryLoader({ params, request }: LoaderFunctionArgs) {
+  const [entry, categories] = await Promise.all([
+    getEntry(params.slug!, request.signal),
+    getCategories(request.signal),
+  ])
+  return { entry, categories }
+}
+
+// "Nuevo trámite" is offered under each category, which comes preselected (?category=).
+export async function newEntryLoader({ request }: LoaderFunctionArgs) {
+  const categories = await getCategories(request.signal)
+  const category = new URL(request.url).searchParams.get('category')
+  return { categories, category }
+}
+
+export async function newEntryAction({ request }: ActionFunctionArgs) {
+  const { outcome, slug } = await createEntry(entryFields(await request.formData()))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  if (outcome === 'conflict') {
+    return { error: 'Ya existe un trámite con ese título.' }
+  }
+  if (outcome === 'invalid') {
+    return { error: 'No se pudo crear: revisa los campos.' }
+  }
+  // To its own page, where requirements and places will be added.
+  return redirect(`/admin/entries/${slug}`)
+}
+
+// The entry form saves; its "Eliminar trámite" button posts here with intent=delete.
+export async function entryAction({ params, request }: ActionFunctionArgs) {
   const form = await request.formData()
+  if (form.get('intent') === 'delete') {
+    const outcome = await deleteEntry(params.slug!)
+    return redirect(outcome === 'logged-out' ? '/admin/login' : '/admin')
+  }
+  const outcome = await updateEntry(params.slug!, entryFields(form))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  return { saved: outcome === 'done' }
+}
+
+function entryFields(form: FormData): EntryFields {
   const field = (name: string) => String(form.get(name))
-  const result = await updateEntry(params.slug!, {
+  return {
     category: field('category'),
     title: field('title'),
     summary: field('summary'),
     cost: field('cost'),
     duration: field('duration'),
     notes: field('notes'),
-  })
-  if (result === 'logged-out') {
-    return redirect('/admin/login')
   }
-  return { saved: result === 'done' }
 }
 
 // The entry list's category forms: new, rename, delete. One action for the page, told

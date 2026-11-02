@@ -147,3 +147,65 @@ test('only an empty category offers to be deleted', async ({ page }) => {
     { method: 'DELETE', url: '/api/admin/categories/deportes', body: null },
   ])
 })
+
+test('a new entry starts in the chosen category and opens once created', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  await fakeCategories(page)
+  let created: unknown
+  await page.route('**/api/admin/entries', (route) => {
+    const body = route.request().postDataJSON()
+    created = body
+    return body.title === 'Diploma'
+      ? route.fulfill({ status: 409, json: { detail: 'Taken' } })
+      : route.fulfill({ status: 201, json: { title: 'Beca', slug: 'beca', summary: '.' } })
+  })
+  await page.route('**/api/entries/beca', (route) =>
+    route.fulfill({
+      json: {
+        title: 'Beca',
+        slug: 'beca',
+        summary: 'Una beca.',
+        cost: null,
+        duration: null,
+        notes: null,
+        category: { name: 'Deportes', slug: 'deportes' },
+        requirements: [],
+        locations: [],
+      },
+    }),
+  )
+  await page.goto('/admin')
+
+  await page.getByRole('link', { name: '+ Nuevo trámite' }).nth(1).click()
+  await expect(page.getByLabel('Categoría')).toHaveValue('deportes')
+
+  await page.getByLabel('Título').fill('Diploma')
+  await page.getByLabel('Resumen').fill('Una beca.')
+  await page.getByRole('button', { name: 'Crear trámite' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Ya existe un trámite con ese título.')
+
+  await page.getByLabel('Título').fill('Beca')
+  await page.getByRole('button', { name: 'Crear trámite' }).click()
+  await expect(page).toHaveURL(/\/admin\/entries\/beca$/)
+  expect(created).toMatchObject({ title: 'Beca', category: 'deportes', summary: 'Una beca.' })
+})
+
+test('deleting an entry asks first, then goes back to the list', async ({ page }) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let deleted = false
+  await page.route('**/api/admin/entries/certificado-de-notas', (route) => {
+    deleted = route.request().method() === 'DELETE'
+    return route.fulfill({ status: 204 })
+  })
+  await page.goto('/admin/entries/certificado-de-notas')
+
+  page.once('dialog', (dialog) => dialog.dismiss())
+  await page.getByRole('button', { name: 'Eliminar trámite' }).click()
+  await expect(page).toHaveURL(/\/admin\/entries\/certificado-de-notas$/)
+  expect(deleted).toBe(false)
+
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'Eliminar trámite' }).click()
+  await expect(page).toHaveURL(/\/admin$/)
+  expect(deleted).toBe(true)
+})

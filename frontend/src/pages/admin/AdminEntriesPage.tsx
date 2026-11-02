@@ -29,6 +29,12 @@ export function AdminEntriesPage({ categories }: { categories: CategoryWithEntri
               ))}
             </ul>
           )}
+          <Link
+            to={`/admin/entries/new?category=${category.slug}`}
+            className="mt-2 inline-block text-sm text-primary hover:underline"
+          >
+            + Nuevo trámite
+          </Link>
         </section>
       ))}
       <NewCategory />

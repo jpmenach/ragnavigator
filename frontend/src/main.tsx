@@ -5,10 +5,13 @@ import { Layout, LayoutError } from './Layout.tsx'
 import {
   adminLoader,
   categoriesAction,
+  entryAction,
+  entryLoader,
   loginAction,
   loginLoader,
   logoutAction,
-  saveEntryAction,
+  newEntryAction,
+  newEntryLoader,
 } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
@@ -17,6 +20,7 @@ import { LocationsError, LocationsPage } from './pages/LocationsPage.tsx'
 import { AdminEntriesPage } from './pages/admin/AdminEntriesPage.tsx'
 import { AdminError, AdminLayout } from './pages/admin/AdminLayout.tsx'
 import { EntryFormPage } from './pages/admin/EntryFormPage.tsx'
+import { NewEntryPage } from './pages/admin/NewEntryPage.tsx'
 import { LoginPage } from './pages/admin/LoginPage.tsx'
 import type {
   Admin,
@@ -78,10 +82,17 @@ const router = createBrowserRouter([
         ErrorBoundary: HomeError,
       },
       {
+        path: 'entries/new',
+        loader: newEntryLoader,
+        action: newEntryAction,
+        Component: () => <NewEntryPage {...useLoaderData<typeof newEntryLoader>()} />,
+        ErrorBoundary: AdminError,
+      },
+      {
         path: 'entries/:slug',
-        loader: ({ params, request }) => getEntry(params.slug!, request.signal),
-        action: saveEntryAction,
-        Component: () => <EntryFormPage entry={useLoaderData<Entry>()} />,
+        loader: entryLoader,
+        action: entryAction,
+        Component: () => <EntryFormPage {...useLoaderData<typeof entryLoader>()} />,
         ErrorBoundary: EntryError,
       },
     ],
