@@ -127,12 +127,14 @@ class AdminOut(Schema):
     username: str
 
 
-class EntryTextIn(BaseModel):
-    """An entry's own text, as the admin form sends it. Requirements and places are edited
-    separately; the slug isn't editable, since pages, the index and links all use it."""
+class EntryIn(BaseModel):
+    """An entry's own fields, as the admin form sends them. Requirements and places are
+    edited separately; the slug isn't editable, since pages, the index and links all use it."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
+    # The category's slug.
+    category: str
     title: str = Field(min_length=1, max_length=200)
     summary: str = Field(min_length=1, max_length=500)
     cost: str | None = Field(default=None, max_length=200)

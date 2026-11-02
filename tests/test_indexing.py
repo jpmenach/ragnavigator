@@ -42,14 +42,34 @@ def test_reindexing_replaces_the_entry_sections_and_its_places(entry, index_call
 
     assert index_calls["replaced"] == [
         "entry/certificado-de-notas/summary",
-        "entry/certificado-de-notas/requirements",
         "entry/certificado-de-notas/where-and-when",
         "location/secretaria/location",
     ]
 
 
-def test_a_section_the_entry_no_longer_has_is_deleted(entry, index_calls):
-    # No notes: whatever the index had for them must not keep answering.
+def test_sections_with_nothing_in_them_are_deleted(entry, index_calls):
+    # No requirements and no notes: whatever the index had for them must not keep answering.
     indexing.reindex_entry(None, entry)
 
-    assert index_calls["deleted"] == ["entry/certificado-de-notas/notes"]
+    assert index_calls["deleted"] == [
+        "entry/certificado-de-notas/requirements",
+        "entry/certificado-de-notas/notes",
+    ]
+
+
+def test_removing_an_entry_deletes_its_sections_and_rebuilds_its_places(
+    entry, db, index_calls
+):
+    places = [entry.locations[0].location]
+    db.delete(entry)
+    db.commit()
+
+    indexing.remove_entry(None, "certificado-de-notas", places)
+
+    assert index_calls["deleted"] == [
+        "entry/certificado-de-notas/summary",
+        "entry/certificado-de-notas/requirements",
+        "entry/certificado-de-notas/where-and-when",
+        "entry/certificado-de-notas/notes",
+    ]
+    assert index_calls["replaced"] == ["location/secretaria/location"]

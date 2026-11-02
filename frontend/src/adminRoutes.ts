@@ -7,7 +7,7 @@ import {
   logIn,
   logOut,
   renameCategory,
-  updateEntryText,
+  updateEntry,
 } from './api'
 
 // Loaders and actions for the admin pages. Kept out of the page files so Vite's fast
@@ -48,7 +48,8 @@ export async function logoutAction() {
 export async function saveEntryAction({ params, request }: ActionFunctionArgs) {
   const form = await request.formData()
   const field = (name: string) => String(form.get(name))
-  const result = await updateEntryText(params.slug!, {
+  const result = await updateEntry(params.slug!, {
+    category: field('category'),
     title: field('title'),
     summary: field('summary'),
     cost: field('cost'),

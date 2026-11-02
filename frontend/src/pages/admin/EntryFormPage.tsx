@@ -25,6 +25,8 @@ export function EntryFormPage({ entry }: { entry: Entry }) {
       {/* Keyed by slug: moving to another entry starts a fresh form, not one holding the
           previous entry's edits. */}
       <Form key={entry.slug} method="post" className="mt-6 max-w-2xl space-y-4">
+        {/* Stays where it is until the form gets a category picker. */}
+        <input type="hidden" name="category" value={entry.category.slug} />
         <label className="block">
           <span className="text-sm font-medium">Título</span>
           <input

@@ -4,7 +4,7 @@ import type {
   AskResponse,
   CategoryWithEntries,
   Entry,
-  EntryText,
+  EntryFields,
   LocationWithEntries,
   Organization,
 } from './types'
@@ -121,8 +121,8 @@ async function adminWrite(method: string, path: string, body?: unknown): Promise
   return 'done'
 }
 
-export function updateEntryText(slug: string, text: EntryText): Promise<AdminWrite> {
-  return adminWrite('PUT', `/api/admin/entries/${slug}`, text)
+export function updateEntry(slug: string, fields: EntryFields): Promise<AdminWrite> {
+  return adminWrite('PUT', `/api/admin/entries/${slug}`, fields)
 }
 
 export function createCategory(name: string): Promise<AdminWrite> {

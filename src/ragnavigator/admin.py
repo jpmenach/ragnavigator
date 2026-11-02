@@ -21,9 +21,16 @@ from ragnavigator.auth import (
     verify_password,
 )
 from ragnavigator.db import SessionDep
-from ragnavigator.indexing import reindex_entry
+from ragnavigator.indexing import reindex_entry, remove_entry
 from ragnavigator.models import AdminSession, AdminUser, Category, Entry
-from ragnavigator.schemas import AdminOut, CategoryIn, CategoryOut, EntryTextIn, LoginIn
+from ragnavigator.schemas import (
+    AdminOut,
+    CategoryIn,
+    CategoryOut,
+    EntryIn,
+    EntrySummaryOut,
+    LoginIn,
+)
 from ragnavigator.slugs import slugify
 
 COOKIE_NAME = "ragnavigator_session"
@@ -104,21 +111,60 @@ def me(admin: CurrentAdmin) -> AdminOut:
     return AdminOut.model_validate(admin)
 
 
+@router.post("/entries", status_code=201)
+def create_entry(body: EntryIn, session: SessionDep, admin: CurrentAdmin) -> EntrySummaryOut:
+    """A new entry with its text only: requirements and places are added once it exists."""
+    # Like a category's, the slug comes from the title once and stays: it's the page's URL.
+    slug = slugify(body.title)
+    if not slug:
+        raise HTTPException(status_code=422, detail="The title needs a letter or a number")
+    if session.scalar(select(Entry.id).where(Entry.slug == slug)) is not None:
+        raise HTTPException(status_code=409, detail="There's already an entry with that title")
+    entry = Entry(slug=slug)
+    _set_entry_fields(session, entry, body)
+    session.add(entry)
+    session.commit()
+    reindex_entry(live_index(), entry)
+    return EntrySummaryOut.model_validate(entry)
+
+
 @router.put("/entries/{slug}", status_code=204)
-def update_entry_text(
-    slug: str, body: EntryTextIn, session: SessionDep, admin: CurrentAdmin
-) -> None:
-    entry = session.scalar(select(Entry).where(Entry.slug == slug))
-    if entry is None:
-        raise HTTPException(status_code=404, detail="Entry not found")
-    for field, value in body.model_dump().items():
-        # A blank optional field means "not set", the same as leaving it out of the catalog.
-        setattr(entry, field, value or None)
+def update_entry(slug: str, body: EntryIn, session: SessionDep, admin: CurrentAdmin) -> None:
+    entry = _get_entry(session, slug)
+    _set_entry_fields(session, entry, body)
     session.commit()
     # Before responding, so "saved" in the admin also means the assistant answers with the
     # new text. If the server hasn't loaded the index yet, this first save loads it (the
     # embedding model takes ~20 s); after that it's about a second.
     reindex_entry(live_index(), entry)
+
+
+@router.delete("/entries/{slug}", status_code=204)
+def delete_entry(slug: str, session: SessionDep, admin: CurrentAdmin) -> None:
+    entry = _get_entry(session, slug)
+    # Read before deleting: afterwards the links to them are gone too.
+    places = list({link.location.slug: link.location for link in entry.locations}.values())
+    # Its requirements and place links go with it (cascades on both).
+    session.delete(entry)
+    session.commit()
+    remove_entry(live_index(), slug, places)
+
+
+def _get_entry(session: Session, slug: str) -> Entry:
+    entry = session.scalar(select(Entry).where(Entry.slug == slug))
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return entry
+
+
+def _set_entry_fields(session: Session, entry: Entry, body: EntryIn) -> None:
+    category = session.scalar(select(Category).where(Category.slug == body.category))
+    if category is None:
+        raise HTTPException(status_code=422, detail="Unknown category")
+    entry.category = category
+    for field, value in body.model_dump(exclude={"category"}).items():
+        # A blank optional field means "not set", the same as leaving it out of the catalog.
+        setattr(entry, field, value or None)
 
 
 @router.post("/categories", status_code=201)

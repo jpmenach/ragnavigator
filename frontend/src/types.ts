@@ -85,5 +85,8 @@ export type Admin = {
   username: string
 }
 
-// What the admin form saves: the entry's own text (EntryTextIn in schemas.py).
-export type EntryText = Pick<Entry, 'title' | 'summary' | 'cost' | 'duration' | 'notes'>
+// What the admin form saves: the entry's own fields (EntryIn in schemas.py), with its
+// category by slug.
+export type EntryFields = Pick<Entry, 'title' | 'summary' | 'cost' | 'duration' | 'notes'> & {
+  category: string
+}
