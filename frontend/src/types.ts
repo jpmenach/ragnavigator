@@ -99,3 +99,10 @@ export type EntryPlace = {
 
 // What the admin's place form saves (LocationIn in schemas.py).
 export type LocationFields = Omit<Location, 'slug'>
+
+export type UnansweredQuestion = {
+  id: number
+  question: string
+  // ISO 8601 in UTC ("…Z").
+  asked_at: string
+}

@@ -7,10 +7,12 @@ import {
   deleteCategory,
   deleteEntry,
   deleteLocation,
+  dismissUnanswered,
   getCategories,
   getCurrentAdmin,
   getEntry,
   getLocations,
+  getUnanswered,
   logIn,
   logOut,
   renameCategory,
@@ -212,6 +214,25 @@ export async function organizationAction({ request }: ActionFunctionArgs) {
     return redirect('/admin/login')
   }
   return { saved: outcome === 'done' }
+}
+
+export async function unansweredLoader({ request }: LoaderFunctionArgs) {
+  const questions = await getUnanswered(request.signal)
+  if (questions === null) {
+    return redirect('/admin/login')
+  }
+  return questions
+}
+
+// Each question's "Descartar" posts its id here, from its own fetcher.
+export async function unansweredAction({ request }: ActionFunctionArgs) {
+  const form = await request.formData()
+  const outcome = await dismissUnanswered(Number(form.get('id')))
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
+  // The list reloads (fetcher actions revalidate the page) without it.
+  return null
 }
 
 // The entry list's category forms: new, rename, delete. One action for the page, told

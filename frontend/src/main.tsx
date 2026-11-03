@@ -18,6 +18,8 @@ import {
   newLocationAction,
   organizationAction,
   requirementsAction,
+  unansweredAction,
+  unansweredLoader,
 } from './adminRoutes.ts'
 import { getCategories, getEntry, getLocations, getOrganization } from './api.ts'
 import { EntryError, EntryPage } from './pages/EntryPage.tsx'
@@ -31,6 +33,7 @@ import { LocationError, LocationFormPage } from './pages/admin/LocationFormPage.
 import { NewEntryPage } from './pages/admin/NewEntryPage.tsx'
 import { NewLocationPage } from './pages/admin/NewLocationPage.tsx'
 import { OrganizationPage } from './pages/admin/OrganizationPage.tsx'
+import { UnansweredPage } from './pages/admin/UnansweredPage.tsx'
 import { LoginPage } from './pages/admin/LoginPage.tsx'
 import type {
   Admin,
@@ -38,6 +41,7 @@ import type {
   Entry,
   LocationWithEntries,
   Organization,
+  UnansweredQuestion,
 } from './types.ts'
 import './index.css'
 
@@ -134,6 +138,13 @@ const router = createBrowserRouter([
         loader: ({ request }) => getOrganization(request.signal),
         action: organizationAction,
         Component: () => <OrganizationPage organization={useLoaderData<Organization>()} />,
+        ErrorBoundary: AdminError,
+      },
+      {
+        path: 'unanswered',
+        loader: unansweredLoader,
+        action: unansweredAction,
+        Component: () => <UnansweredPage questions={useLoaderData<UnansweredQuestion[]>()} />,
         ErrorBoundary: AdminError,
       },
     ],

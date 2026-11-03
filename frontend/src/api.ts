@@ -11,6 +11,7 @@ import type {
   LocationWithEntries,
   Organization,
   Requirement,
+  UnansweredQuestion,
 } from './types'
 
 export async function getEntry(slug: string, signal: AbortSignal): Promise<Entry> {
@@ -179,6 +180,33 @@ export function deleteLocation(slug: string): Promise<AdminWrite> {
 
 export function updateOrganization(organization: Organization): Promise<AdminWrite> {
   return adminWrite('PUT', '/api/admin/organization', organization)
+}
+
+// null when the session is gone: the page sends the admin to the login, as writes do.
+export async function getUnanswered(
+  signal: AbortSignal,
+): Promise<UnansweredQuestion[] | null> {
+  const response = await fetch('/api/admin/unanswered', { signal })
+  if (response.status === 401) {
+    return null
+  }
+  if (!response.ok) {
+    throw new Error(`GET /api/admin/unanswered failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+export async function dismissUnanswered(id: number): Promise<AdminWrite> {
+  const path = `/api/admin/unanswered/${id}`
+  const response = await fetch(path, { method: 'DELETE' })
+  if (response.status === 401) {
+    return 'logged-out'
+  }
+  // 404: already dismissed, in another tab. Either way it's gone, which is the point.
+  if (!response.ok && response.status !== 404) {
+    throw new Error(`DELETE ${path} failed with ${response.status}`)
+  }
+  return 'done'
 }
 
 export function createCategory(name: string): Promise<AdminWrite> {

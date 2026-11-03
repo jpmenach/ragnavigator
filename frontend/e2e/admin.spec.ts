@@ -379,3 +379,35 @@ test('the organization form previews the color with readable text, then saves', 
   await expect(page.getByRole('status')).toHaveText('Guardado.')
   expect(saved).toEqual({ name: 'Universidad Andina', primary_color: '#a31f34' })
 })
+
+test.describe('unanswered questions', () => {
+  // The API sends UTC; the page should show the admin's own time.
+  test.use({ timezoneId: 'America/La_Paz' })
+
+  test('are listed in local time, and dismissing one takes it off', async ({ page }) => {
+    await fakeAdminApi(page, { loggedIn: true })
+    let questions = [
+      { id: 2, question: '¿Hay comedor?', asked_at: '2026-11-02T22:15:00Z' },
+      { id: 1, question: '¿Dónde está la biblioteca?', asked_at: '2026-11-01T13:00:00Z' },
+    ]
+    await page.route('**/api/admin/unanswered**', (route) => {
+      if (route.request().method() === 'DELETE') {
+        const id = Number(new URL(route.request().url()).pathname.split('/').pop())
+        questions = questions.filter((question) => question.id !== id)
+        return route.fulfill({ status: 204 })
+      }
+      return route.fulfill({ json: questions })
+    })
+    await page.goto('/admin')
+    await page.getByRole('link', { name: 'Sin respuesta' }).click()
+
+    const comedor = page.getByRole('listitem').filter({ hasText: '¿Hay comedor?' })
+    // 22:15 UTC is 18:15 in La Paz (UTC−4).
+    await expect(comedor.locator('time')).toContainText('18:15')
+    await comedor.getByRole('button', { name: 'Descartar' }).click()
+
+    await expect(page.getByText('¿Hay comedor?')).toHaveCount(0)
+    await expect(page.getByText('¿Dónde está la biblioteca?')).toBeVisible()
+    expect(questions.map((question) => question.id)).toEqual([1])
+  })
+})
