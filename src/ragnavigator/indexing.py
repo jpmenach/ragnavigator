@@ -10,7 +10,9 @@ Run from the repo root (after seeding) with:
     uv run python -m ragnavigator.indexing
 """
 
+import hashlib
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from llama_index.core import Document, VectorStoreIndex
 from ragstarter.core.ingest import (
@@ -110,25 +112,91 @@ def location_document(location: Location) -> Document:
     )
 
 
+def load_catalog(session: Session) -> tuple[list[Entry], list[Location]]:
+    """Every entry and place, with what their documents need, in a few queries."""
+    entries = session.scalars(
+        select(Entry).options(
+            joinedload(Entry.category),
+            selectinload(Entry.requirements),
+            selectinload(Entry.locations).joinedload(EntryLocation.location),
+        )
+    ).all()
+    locations = session.scalars(
+        select(Location).options(selectinload(Location.entries).joinedload(EntryLocation.entry))
+    ).all()
+    return list(entries), list(locations)
+
+
 def build_catalog_index() -> int:
     with Session(engine) as session:
-        entries = session.scalars(
-            select(Entry).options(
-                joinedload(Entry.category),
-                selectinload(Entry.requirements),
-                selectinload(Entry.locations).joinedload(EntryLocation.location),
-            )
-        ).all()
-        locations = session.scalars(
-            select(Location).options(
-                selectinload(Location.entries).joinedload(EntryLocation.entry)
-            )
-        ).all()
+        entries, locations = load_catalog(session)
         documents = [doc for entry in entries for doc in entry_documents(entry)]
         documents += [location_document(location) for location in locations]
 
     build_index_from_documents(documents, INDEX_DIR)
     return len(documents)
+
+
+@dataclass
+class IndexStatus:
+    """What in a live index differs from the catalog, by slug."""
+
+    stale_entries: set[str]
+    stale_locations: set[str]
+    # Documents of entries or places the catalog no longer has.
+    orphans: list[str]
+
+
+def index_status(
+    index: VectorStoreIndex, entries: list[Entry], locations: list[Location]
+) -> IndexStatus:
+    """Compare what the catalog would index now with what the index holds.
+
+    Each document carries a hash of its text (`content_hash`), and every chunk inherits it,
+    so no text has to be compared. An entry or place is stale when one of its documents is
+    missing or has another hash, or when the index still has a section it no longer has.
+    A document indexed before hashes existed has none, so it reads as stale: unknown.
+    """
+    indexed = {
+        node.ref_doc_id: node.metadata.get("content_hash")
+        for node in index.vector_store.get_nodes(None)
+    }
+
+    def stale(documents: list[Document], possible_ids: list[str]) -> bool:
+        expected = {document.doc_id: document.metadata["content_hash"] for document in documents}
+        changed = any(indexed.get(id_) != hash_ for id_, hash_ in expected.items())
+        leftover = any(id_ in indexed and id_ not in expected for id_ in possible_ids)
+        return changed or leftover
+
+    known = {_document_id("location", location.slug, "location") for location in locations}
+    for entry in entries:
+        known.update(_entry_document_ids(entry.slug))
+    return IndexStatus(
+        stale_entries={
+            entry.slug
+            for entry in entries
+            if stale(entry_documents(entry), _entry_document_ids(entry.slug))
+        },
+        stale_locations={
+            location.slug
+            for location in locations
+            if stale([location_document(location)], [])
+        },
+        orphans=sorted(id_ for id_ in indexed if id_ not in known),
+    )
+
+
+def sync_index(index: VectorStoreIndex, entries: list[Entry], locations: list[Location]) -> None:
+    """Re-index only what index_status finds stale, and delete the orphans."""
+    status = index_status(index, entries, locations)
+    for entry in entries:
+        if entry.slug in status.stale_entries:
+            reindex_entry(index, entry)
+    for location in locations:
+        if location.slug in status.stale_locations:
+            replace_documents(index, [location_document(location)])
+    if status.orphans:
+        delete_documents(index, status.orphans)
 
 
 def reindex_entry(
@@ -195,13 +263,22 @@ def _describe_location(location: Location) -> str:
 
 
 def _document(text: str, kind: str, slug: str, section: str, route: str) -> Document:
-    metadata = {"kind": kind, "slug": slug, "section": section, "route": route}
+    metadata = {
+        "kind": kind,
+        "slug": slug,
+        "section": section,
+        "route": route,
+        # What index_status compares: whether the index has this exact text.
+        "content_hash": hashlib.sha256(text.encode()).hexdigest()[:16],
+    }
     return Document(
         # Stable, so an edit can replace exactly this document in the index.
         id_=_document_id(kind, slug, section),
         text=text,
         metadata=metadata,
         excluded_embed_metadata_keys=list(metadata),
+        # A hash means nothing to the model; keep it out of the prompt.
+        excluded_llm_metadata_keys=["content_hash"],
     )
 
 

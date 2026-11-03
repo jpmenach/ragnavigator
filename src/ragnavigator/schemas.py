@@ -143,6 +143,20 @@ class UnansweredQuestionOut(Schema):
         return value.replace(tzinfo=UTC)
 
 
+class IndexedItemOut(BaseModel):
+    slug: str
+    # An entry's title or a place's name.
+    name: str
+    up_to_date: bool
+
+
+class IndexStatusOut(BaseModel):
+    entries: list[IndexedItemOut]
+    locations: list[IndexedItemOut]
+    # Documents of entries or places that were deleted but are still in the index.
+    orphans: int
+
+
 class EntryIn(BaseModel):
     """An entry's own fields, as the admin form sends them. Requirements and places are
     edited separately; the slug isn't editable, since pages, the index and links all use it."""

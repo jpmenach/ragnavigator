@@ -21,7 +21,15 @@ from ragnavigator.auth import (
     verify_password,
 )
 from ragnavigator.db import SessionDep
-from ragnavigator.indexing import reindex_entry, reindex_location, remove_entry, remove_location
+from ragnavigator.indexing import (
+    index_status,
+    load_catalog,
+    reindex_entry,
+    reindex_location,
+    remove_entry,
+    remove_location,
+    sync_index,
+)
 from ragnavigator.models import (
     AdminSession,
     AdminUser,
@@ -40,6 +48,8 @@ from ragnavigator.schemas import (
     EntryIn,
     EntryLocationIn,
     EntrySummaryOut,
+    IndexedItemOut,
+    IndexStatusOut,
     LocationIn,
     LocationOut,
     LoginIn,
@@ -323,6 +333,41 @@ def dismiss_unanswered(question_id: int, session: SessionDep, admin: CurrentAdmi
         raise HTTPException(status_code=404, detail="Question not found")
     session.delete(question)
     session.commit()
+
+
+@router.get("/index-status")
+def get_index_status(session: SessionDep, admin: CurrentAdmin) -> IndexStatusOut:
+    """Whether the assistant's index matches the catalog, entry by entry and place by
+    place. Saving from the admin keeps them in step; this shows when something didn't
+    (a re-index that failed after the save, a database edited by hand)."""
+    entries, locations = load_catalog(session)
+    status = index_status(live_index(), entries, locations)
+    return IndexStatusOut(
+        entries=[
+            IndexedItemOut(
+                slug=entry.slug,
+                name=entry.title,
+                up_to_date=entry.slug not in status.stale_entries,
+            )
+            for entry in entries
+        ],
+        locations=[
+            IndexedItemOut(
+                slug=location.slug,
+                name=location.name,
+                up_to_date=location.slug not in status.stale_locations,
+            )
+            for location in locations
+        ],
+        orphans=len(status.orphans),
+    )
+
+
+@router.post("/index-status/sync", status_code=204)
+def sync_index_status(session: SessionDep, admin: CurrentAdmin) -> None:
+    """Re-index what's out of date and drop what was deleted; the rest is left alone."""
+    entries, locations = load_catalog(session)
+    sync_index(live_index(), entries, locations)
 
 
 @router.post("/categories", status_code=201)
