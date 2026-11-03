@@ -1,20 +1,23 @@
 import { Form, Link, NavLink, Outlet } from 'react-router'
 import type { Admin } from '../../types'
 
+// whitespace-nowrap: on a phone the links wrap as a whole ("Sin respuesta" stays together).
 function navLinkClass({ isActive }: { isActive: boolean }) {
-  return isActive ? 'font-medium text-primary' : 'text-gray-600 hover:underline'
+  const state = isActive ? 'font-medium text-primary' : 'text-gray-600 hover:underline'
+  return `whitespace-nowrap ${state}`
 }
 
 export function AdminLayout({ admin }: { admin: Admin }) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <header className="border-b border-gray-200">
-        <div className="mx-auto flex max-w-6xl items-baseline justify-between gap-6 px-4 py-4">
-          <div className="flex flex-wrap items-baseline gap-x-6">
+        {/* Wraps on a phone, so the username and "Cerrar sesión" aren't pushed off screen. */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-4">
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
             <Link to="/admin" className="text-lg font-semibold">
               Administración
             </Link>
-            <nav className="flex gap-4 text-sm">
+            <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
               {/* `end`: /admin is a prefix of every admin URL, places included. */}
               <NavLink to="/admin" end className={navLinkClass}>
                 Trámites
@@ -27,6 +30,9 @@ export function AdminLayout({ admin }: { admin: Admin }) {
               </NavLink>
               <NavLink to="/admin/unanswered" className={navLinkClass}>
                 Sin respuesta
+              </NavLink>
+              <NavLink to="/admin/index" className={navLinkClass}>
+                Índice
               </NavLink>
             </nav>
           </div>

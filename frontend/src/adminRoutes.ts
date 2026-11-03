@@ -11,6 +11,7 @@ import {
   getCategories,
   getCurrentAdmin,
   getEntry,
+  getIndexStatus,
   getLocations,
   getUnanswered,
   logIn,
@@ -18,6 +19,7 @@ import {
   renameCategory,
   replaceLocations,
   replaceRequirements,
+  syncIndex,
   updateEntry,
   updateLocation,
   updateOrganization,
@@ -232,6 +234,24 @@ export async function unansweredAction({ request }: ActionFunctionArgs) {
     return redirect('/admin/login')
   }
   // The list reloads (fetcher actions revalidate the page) without it.
+  return null
+}
+
+export async function indexStatusLoader({ request }: LoaderFunctionArgs) {
+  const status = await getIndexStatus(request.signal)
+  if (status === null) {
+    return redirect('/admin/login')
+  }
+  return status
+}
+
+// "Reindexar lo desactualizado". The page reloads the status afterwards, so it shows what
+// the sync left, not what it was asked to do.
+export async function indexStatusAction() {
+  const outcome = await syncIndex()
+  if (outcome === 'logged-out') {
+    return redirect('/admin/login')
+  }
   return null
 }
 

@@ -106,3 +106,16 @@ export type UnansweredQuestion = {
   // ISO 8601 in UTC ("…Z").
   asked_at: string
 }
+
+export type IndexedItem = {
+  slug: string
+  // An entry's title or a place's name.
+  name: string
+  up_to_date: boolean
+}
+
+export type IndexStatus = {
+  entries: IndexedItem[]
+  locations: IndexedItem[]
+  orphans: number
+}

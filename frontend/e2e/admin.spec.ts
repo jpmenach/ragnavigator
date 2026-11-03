@@ -411,3 +411,41 @@ test.describe('unanswered questions', () => {
     expect(questions.map((question) => question.id)).toEqual([1])
   })
 })
+
+test('the index page lists what is out of date, and syncing brings it up to date', async ({
+  page,
+}) => {
+  await fakeAdminApi(page, { loggedIn: true })
+  let synced = false
+  await page.route('**/api/admin/index-status/sync', (route) => {
+    synced = true
+    return route.fulfill({ status: 204 })
+  })
+  await page.route('**/api/admin/index-status', (route) =>
+    route.fulfill({
+      json: {
+        entries: [
+          { slug: 'certificado-de-notas', name: 'Certificado de notas', up_to_date: synced },
+          { slug: 'beca', name: 'Beca', up_to_date: true },
+        ],
+        locations: [{ slug: 'caja-central', name: 'Caja central', up_to_date: true }],
+        orphans: synced ? 0 : 2,
+      },
+    }),
+  )
+  await page.goto('/admin')
+  await page.getByRole('link', { name: 'Índice' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Trámites desactualizados' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Certificado de notas' })).toHaveAttribute(
+    'href',
+    '/admin/entries/certificado-de-notas',
+  )
+  await expect(page.getByText('2 documentos de cosas que ya se eliminaron.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lugares desactualizados' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Reindexar lo desactualizado' }).click()
+
+  await expect(page.getByRole('status')).toHaveText('Todo al día: 2 trámites y 1 lugar.')
+  expect(synced).toBe(true)
+})

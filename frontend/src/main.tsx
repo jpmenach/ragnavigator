@@ -7,6 +7,8 @@ import {
   categoriesAction,
   entryAction,
   entryLoader,
+  indexStatusAction,
+  indexStatusLoader,
   locationAction,
   locationLoader,
   locationsAction,
@@ -29,6 +31,7 @@ import { AdminEntriesPage } from './pages/admin/AdminEntriesPage.tsx'
 import { AdminError, AdminLayout } from './pages/admin/AdminLayout.tsx'
 import { AdminLocationsPage } from './pages/admin/AdminLocationsPage.tsx'
 import { EntryFormPage } from './pages/admin/EntryFormPage.tsx'
+import { IndexStatusPage } from './pages/admin/IndexStatusPage.tsx'
 import { LocationError, LocationFormPage } from './pages/admin/LocationFormPage.tsx'
 import { NewEntryPage } from './pages/admin/NewEntryPage.tsx'
 import { NewLocationPage } from './pages/admin/NewLocationPage.tsx'
@@ -39,6 +42,7 @@ import type {
   Admin,
   CategoryWithEntries,
   Entry,
+  IndexStatus,
   LocationWithEntries,
   Organization,
   UnansweredQuestion,
@@ -145,6 +149,13 @@ const router = createBrowserRouter([
         loader: unansweredLoader,
         action: unansweredAction,
         Component: () => <UnansweredPage questions={useLoaderData<UnansweredQuestion[]>()} />,
+        ErrorBoundary: AdminError,
+      },
+      {
+        path: 'index',
+        loader: indexStatusLoader,
+        action: indexStatusAction,
+        Component: () => <IndexStatusPage status={useLoaderData<IndexStatus>()} />,
         ErrorBoundary: AdminError,
       },
     ],

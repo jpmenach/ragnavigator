@@ -7,6 +7,7 @@ import type {
   EntryFields,
   EntryPlace,
   EntrySummary,
+  IndexStatus,
   LocationFields,
   LocationWithEntries,
   Organization,
@@ -207,6 +208,22 @@ export async function dismissUnanswered(id: number): Promise<AdminWrite> {
     throw new Error(`DELETE ${path} failed with ${response.status}`)
   }
   return 'done'
+}
+
+// null when the session is gone, like getUnanswered.
+export async function getIndexStatus(signal: AbortSignal): Promise<IndexStatus | null> {
+  const response = await fetch('/api/admin/index-status', { signal })
+  if (response.status === 401) {
+    return null
+  }
+  if (!response.ok) {
+    throw new Error(`GET /api/admin/index-status failed with ${response.status}`)
+  }
+  return response.json()
+}
+
+export function syncIndex(): Promise<AdminWrite> {
+  return adminWrite('POST', '/api/admin/index-status/sync')
 }
 
 export function createCategory(name: string): Promise<AdminWrite> {

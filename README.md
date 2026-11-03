@@ -18,7 +18,7 @@ Spanish. The assistant runs on a local LLM and is built on
 | 1 | Catalog site: procedures, places, requirements PDF, per-organization theme | Done |
 | 2 | Index the catalog, `/api/ask`, evaluation | Done |
 | 3 | Assistant panel; the site navigates and highlights on its own | Done |
-| 4 | Admin: login, editing, re-indexing on save, unanswered questions | Planned |
+| 4 | Admin: login, editing, re-indexing on save, unanswered questions, index status | Done |
 
 ## How it works
 
@@ -107,11 +107,11 @@ All with the local `llama3.1:8b`.
   though the catalog says first aid yes, serious emergencies go to the hospital.
 - **One destination per answer.** Navigation follows the top source only. A question
   about two places ("where do I request it and where do I pay?") opens one of them.
-- **The admin is in progress.** At `/admin`, an entry's text can be edited, and saving
-  re-indexes just that entry (about a second), so the assistant answers with the new text
-  right away. Categories, requirements, places and new entries still come from
-  `examples/universidad-demo/data/catalog.json` through the seed script, which replaces
-  the whole catalog.
+- **The admin re-indexes on save, and only on save.** Each save re-indexes what it changed
+  (about a second), so the assistant answers with the new text right away. A change that
+  bypasses the admin (the database edited by hand) or a re-index that fails after the save
+  leaves the index behind; `/admin/index` shows what's out of date and re-indexes just
+  that. The first admin request after a server start loads the embedding model (~20 s).
 - **One server process.** Edits go into the index the server has loaded, so with several
   worker processes the others wouldn't see them. A full rebuild from the command line
   (`python -m ragnavigator.indexing`) still needs a server restart afterwards.
