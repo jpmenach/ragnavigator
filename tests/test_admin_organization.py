@@ -19,11 +19,11 @@ def test_editing_the_organization_needs_a_login(client, organization):
 def test_saving_changes_what_the_site_reads(client, admin, organization):
     log_in(client)
 
-    response = client.put(URL, json={"name": " Universidad Andina ", "primary_color": "#A31F34"})
+    response = client.put(URL, json={"name": " Universidad Monteluz ", "primary_color": "#A31F34"})
 
     assert response.status_code == 204
     assert client.get("/api/organization").json() == {
-        "name": "Universidad Andina",
+        "name": "Universidad Monteluz",
         "primary_color": "#A31F34",
     }
 

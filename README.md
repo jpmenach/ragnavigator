@@ -7,7 +7,7 @@ highlights them, and offers the requirements as a PDF.
 
 ![The assistant answered, opened the procedure and highlighted its requirements](docs/images/assistant-navigates.png)
 
-The demo is a fictional university, Universidad Nueva Cordillera, with its content in
+The demo is a fictional university, Universidad Monteluz, with its content in
 Spanish. The assistant runs on a local LLM and is built on
 [ragstarter](https://github.com/jpmenach/ragstarter), my RAG engine, used here as a library.
 
@@ -70,8 +70,9 @@ question ──► ragstarter: retrieve, check relevance, answer from the contex
   Text on that color is white or black, whichever contrasts more (WCAG luminance). The
   color is validated as `#rrggbb` before it can reach the stylesheet.
 - **ragstarter stays a separate package.** Two projects on one engine is the proof that
-  it's reusable. ragnavigator drove the two engine changes it needed: chunk metadata in
-  results, and indexing documents built in memory.
+  it's reusable. ragnavigator drove the three engine changes it needed: chunk metadata in
+  results, indexing documents built in memory, and replacing or deleting documents by id
+  (so a save re-indexes one entry in about a second instead of rebuilding in ~20 s).
 
 ## Evaluation
 
@@ -89,9 +90,10 @@ ragstarter's 0.30 threshold separates off-topic questions; uncovered ones overla
 answerable ones, so only the LLM's own check can tell them apart.
 
 The browser tests (`frontend/e2e/`, Playwright) check what the interface does with an
-answer: navigation, highlight, PDF link, suggest mode, the phone layout. They replace
-`/api/ask` with fixed answers, so they're deterministic; answer quality is the evaluation's
-job.
+answer (navigation, highlight, PDF link, suggest mode, the phone layout) and what the admin
+pages send. They replace `/api/ask` and the admin API with fixed responses, so they're
+deterministic; answer quality is the evaluation's job, and the backend tests (`tests/`,
+pytest) cover the admin API against a real database.
 
 ## Known limitations
 
@@ -120,17 +122,16 @@ All with the local `llama3.1:8b`.
 
 Requirements: Python 3.12 and [uv](https://docs.astral.sh/uv/), Node 22.22 or newer, and
 [Ollama](https://ollama.com) with the model pulled (`ollama pull llama3.1:8b`).
-ragstarter is installed from a sibling folder during development, so clone both side by
-side:
+`uv sync` installs ragstarter from its tagged release on GitHub.
 
 ```bash
-git clone https://github.com/jpmenach/ragstarter
 git clone https://github.com/jpmenach/ragnavigator
 cd ragnavigator
 uv sync
 uv run alembic upgrade head                # create (or update) the database tables
 uv run python -m ragnavigator.seed examples/universidad-demo/data/catalog.json
 uv run python -m ragnavigator.indexing     # first run downloads bge-m3 (~2.3 GB)
+uv run python -m ragnavigator.create_admin admin   # asks for a password; for /admin
 ```
 
 Development, with hot reload (two terminals):
@@ -143,7 +144,7 @@ cd frontend && npm install && npm run dev  # http://localhost:5173
 Production-like, one process (FastAPI also serves the built frontend):
 
 ```bash
-cd frontend && npm run build && cd ..
+cd frontend && npm install && npm run build && cd ..
 uv run fastapi run src/ragnavigator/main.py   # http://localhost:8000
 ```
 

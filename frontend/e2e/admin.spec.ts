@@ -367,8 +367,8 @@ test('the organization form previews the color with readable text, then saves', 
   await expect(page.getByRole('heading', { name: 'Organización' })).toBeVisible()
   const preview = page.getByTestId('preview')
 
-  await page.getByLabel('Nombre', { exact: true }).fill('Universidad Andina')
-  await expect(preview).toHaveText('Universidad Andina')
+  await page.getByLabel('Nombre', { exact: true }).fill('Universidad Monteluz')
+  await expect(preview).toHaveText('Universidad Monteluz')
   // A light color gets black text, a dark one white, as on the site.
   await page.getByLabel('Color principal').fill('#f5d90a')
   await expect(preview).toHaveCSS('color', 'rgb(0, 0, 0)')
@@ -377,7 +377,7 @@ test('the organization form previews the color with readable text, then saves', 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
   await expect(page.getByRole('status')).toHaveText('Guardado.')
-  expect(saved).toEqual({ name: 'Universidad Andina', primary_color: '#a31f34' })
+  expect(saved).toEqual({ name: 'Universidad Monteluz', primary_color: '#a31f34' })
 })
 
 test.describe('unanswered questions', () => {
