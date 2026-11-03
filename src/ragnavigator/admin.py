@@ -31,6 +31,7 @@ from ragnavigator.models import (
     Location,
     Organization,
     Requirement,
+    UnansweredQuestion,
 )
 from ragnavigator.schemas import (
     AdminOut,
@@ -38,12 +39,13 @@ from ragnavigator.schemas import (
     CategoryOut,
     EntryIn,
     EntryLocationIn,
+    EntrySummaryOut,
     LocationIn,
     LocationOut,
-    EntrySummaryOut,
     LoginIn,
     OrganizationIn,
     RequirementIn,
+    UnansweredQuestionOut,
 )
 from ragnavigator.slugs import slugify
 
@@ -298,6 +300,28 @@ def update_organization(body: OrganizationIn, session: SessionDep, admin: Curren
         raise HTTPException(status_code=404, detail="Organization not configured")
     organization.name = body.name
     organization.primary_color = body.primary_color
+    session.commit()
+
+
+@router.get("/unanswered")
+def list_unanswered(session: SessionDep, admin: CurrentAdmin) -> list[UnansweredQuestionOut]:
+    """What people asked that the catalog didn't answer, newest first."""
+    # A cap, not paging: the list is a to-do list, worked down by deleting what's covered.
+    questions = session.scalars(
+        select(UnansweredQuestion)
+        .order_by(UnansweredQuestion.asked_at.desc(), UnansweredQuestion.id.desc())
+        .limit(500)
+    )
+    return [UnansweredQuestionOut.model_validate(question) for question in questions]
+
+
+@router.delete("/unanswered/{question_id}", status_code=204)
+def dismiss_unanswered(question_id: int, session: SessionDep, admin: CurrentAdmin) -> None:
+    """Once the catalog covers it (or it was never a catalog question), it goes."""
+    question = session.get(UnansweredQuestion, question_id)
+    if question is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    session.delete(question)
     session.commit()
 
 

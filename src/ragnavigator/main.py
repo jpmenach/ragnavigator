@@ -9,8 +9,16 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from ragnavigator import admin
 from ragnavigator.actions import actions_for
 from ragnavigator.assistant import ask
+from ragnavigator.auth import utcnow
 from ragnavigator.db import SessionDep
-from ragnavigator.models import Category, Entry, EntryLocation, Location, Organization
+from ragnavigator.models import (
+    Category,
+    Entry,
+    EntryLocation,
+    Location,
+    Organization,
+    UnansweredQuestion,
+)
 from ragnavigator.pdf import requirements_pdf
 from ragnavigator.schemas import (
     AskIn,
@@ -62,9 +70,12 @@ def get_entry_pdf(slug: str, session: SessionDep) -> Response:
 
 
 @app.post("/api/ask")
-def ask_question(body: AskIn) -> AskOut:
+def ask_question(body: AskIn, session: SessionDep) -> AskOut:
     result = ask(body.question)
     if not result.grounded:
+        # Kept for the admin: what people ask that the catalog doesn't cover yet.
+        session.add(UnansweredQuestion(question=body.question.strip(), asked_at=utcnow()))
+        session.commit()
         # Retrieval always returns its closest chunks, even for an unrelated question. Only
         # sources that backed an answer are worth showing, or navigating to.
         return AskOut(answer="", grounded=False, sources=[], actions=[])

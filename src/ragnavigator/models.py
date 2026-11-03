@@ -171,3 +171,18 @@ class AdminSession(Base):
     expires_at: Mapped[datetime]
 
     admin: Mapped[AdminUser] = relationship()
+
+
+class UnansweredQuestion(Base):
+    """A question the catalog couldn't answer: what content is missing, in people's words.
+
+    Only the text and when. No IP, session or anything else that would tie it to a person;
+    an admin deletes it once the catalog covers it.
+    """
+
+    __tablename__ = "unanswered_question"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    question: Mapped[str] = mapped_column(Text)
+    # UTC, like AdminSession's times.
+    asked_at: Mapped[datetime]

@@ -1,9 +1,10 @@
 """What the API takes and returns. Kept apart from the models so the database can change without
 changing the shape the frontend relies on. """
 
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ragnavigator.models import HEX_COLOR
 
@@ -127,6 +128,19 @@ class LoginIn(BaseModel):
 
 class AdminOut(Schema):
     username: str
+
+
+class UnansweredQuestionOut(Schema):
+    id: int
+    question: str
+    asked_at: datetime
+
+    @field_validator("asked_at")
+    @classmethod
+    def _in_utc(cls, value: datetime) -> datetime:
+        # Stored as UTC without a zone (SQLite has none). Saying so makes it "…Z" in the
+        # JSON; otherwise the browser would read it as local time, hours off.
+        return value.replace(tzinfo=UTC)
 
 
 class EntryIn(BaseModel):
