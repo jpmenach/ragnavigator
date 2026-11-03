@@ -23,7 +23,10 @@ requires = ["uv_build>=0.12.16,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-ragstarter = { path = "../ragstarter", editable = true }
+# A tagged release, so a fresh clone installs with `uv sync` alone. To change ragstarter
+# alongside this project, point it at a local copy for a while:
+# `uv add --editable ../ragstarter`, and back to a new tag before committing.
+ragstarter = { git = "https://github.com/jpmenach/ragstarter", tag = "v0.3.0" }
 
 [tool.alembic]
 script_location = "migrations"
